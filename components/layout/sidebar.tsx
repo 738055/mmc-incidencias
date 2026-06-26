@@ -7,6 +7,7 @@ import {
   Ticket,
   Rocket,
   BookOpen,
+  GraduationCap,
   Server,
   Users,
   Building2,
@@ -22,6 +23,7 @@ const baseNav = [
   { href: "/incidencias", label: "Incidências", icon: Ticket },
   { href: "/melhorias", label: "Melhorias", icon: Rocket },
   { href: "/base-conhecimento", label: "Base de conhecimento", icon: BookOpen },
+  { href: "/tutoriais", label: "Tutoriais", icon: GraduationCap },
 ];
 
 const adminNav = [

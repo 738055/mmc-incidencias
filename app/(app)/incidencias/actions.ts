@@ -437,6 +437,28 @@ export async function resolveIncidentAction(
     .eq("id", parsed.data.incidentId);
   if (error) return { error: "Não foi possível registrar a conclusão." };
 
+  // Anexos da solução (vídeo/imagens demonstrando como foi resolvido).
+  try {
+    const raw = formData.get("attachments");
+    if (typeof raw === "string" && raw) {
+      const atts: AttachmentInput[] = JSON.parse(raw);
+      if (atts.length > 0) {
+        await supabase.from("incident_attachments").insert(
+          atts.map((a) => ({
+            incident_id: parsed.data.incidentId,
+            storage_path: a.path,
+            file_name: a.name,
+            mime_type: a.mime,
+            size_bytes: a.size,
+            uploaded_by: profile.id,
+          })),
+        );
+      }
+    }
+  } catch (err) {
+    console.error("[resolve] anexos:", err);
+  }
+
   // Recalcula o embedding incluindo a solução (melhora a busca semântica na
   // base de conhecimento) e notifica o solicitante. Best-effort.
   try {

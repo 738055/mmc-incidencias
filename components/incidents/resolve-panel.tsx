@@ -9,6 +9,7 @@ import {
 } from "@/app/(app)/incidencias/actions";
 import { Button } from "@/components/ui/button";
 import { Label, Textarea } from "@/components/ui/input";
+import { MediaUploader } from "@/components/media/media-uploader";
 import type { TicketKind } from "@/lib/supabase/types";
 
 function SubmitButton({ label }: { label: string }) {
@@ -27,9 +28,11 @@ function SubmitButton({ label }: { label: string }) {
 
 export function ResolvePanel({
   incidentId,
+  userId,
   kind = "incident",
 }: {
   incidentId: string;
+  userId: string;
   kind?: TicketKind;
 }) {
   const isImprovement = kind === "improvement";
@@ -39,23 +42,29 @@ export function ResolvePanel({
   );
 
   return (
-    <form action={formAction} className="space-y-2">
+    <form action={formAction} className="space-y-3">
       <input type="hidden" name="incidentId" value={incidentId} />
       <input type="hidden" name="kind" value={kind} />
-      <Label htmlFor="resolution">
-        {isImprovement ? "Notas de entrega" : "Solução aplicada"}
-      </Label>
-      <Textarea
-        id="resolution"
-        name="resolution"
-        rows={4}
-        required
-        placeholder={
-          isImprovement
-            ? "O que foi desenvolvido/entregue. Isso vira histórico e alimenta a IA."
-            : "Descreva o que foi feito para resolver. Isso alimenta a base de conhecimento e a IA."
-        }
-      />
+      <div>
+        <Label htmlFor="resolution">
+          {isImprovement ? "Notas de entrega" : "Solução aplicada"}
+        </Label>
+        <Textarea
+          id="resolution"
+          name="resolution"
+          rows={4}
+          required
+          placeholder={
+            isImprovement
+              ? "O que foi desenvolvido/entregue. Isso vira histórico e alimenta a IA."
+              : "Descreva o que foi feito para resolver. Isso alimenta a base de conhecimento e a IA."
+          }
+        />
+      </div>
+      <div>
+        <Label>Vídeo/imagens da solução (opcional)</Label>
+        <MediaUploader userId={userId} name="attachments" />
+      </div>
       {state.error && <p className="text-xs text-red-600">{state.error}</p>}
       <div className="flex justify-end">
         <SubmitButton

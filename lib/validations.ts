@@ -50,6 +50,13 @@ export const createUserSchema = z.object({
   role: z.enum(["requester", "technician", "admin"]),
 });
 
+export const tutorialSchema = z.object({
+  title: z.string().min(3, "Título muito curto").max(200),
+  content: z.string().max(20000).optional().or(z.literal("")),
+  systemId: z.string().uuid().optional().or(z.literal("")),
+  category: z.string().max(80).optional().or(z.literal("")),
+});
+
 export const incidentSchema = z.object({
   kind: z.enum(["incident", "improvement"]).default("incident"),
   title: z.string().min(3, "Título muito curto").max(160),

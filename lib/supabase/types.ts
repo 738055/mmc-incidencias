@@ -106,6 +106,32 @@ export type IncidentAttachment = {
   created_at: string;
 }
 
+export type MediaKind = "image" | "video" | "file";
+
+export type Tutorial = {
+  id: string;
+  title: string;
+  content: string;
+  system_id: string | null;
+  category: string | null;
+  published: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type TutorialMedia = {
+  id: string;
+  tutorial_id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  kind: MediaKind;
+  sort: number;
+  created_at: string;
+}
+
 export type NotificationType =
   | "status_change"
   | "comment"
@@ -212,6 +238,33 @@ type AttachmentRels = [
   },
 ];
 
+type TutorialRels = [
+  {
+    foreignKeyName: "tutorials_system_id_fkey";
+    columns: ["system_id"];
+    referencedRelation: "systems";
+    referencedColumns: ["id"];
+    isOneToOne: false;
+  },
+  {
+    foreignKeyName: "tutorials_created_by_fkey";
+    columns: ["created_by"];
+    referencedRelation: "profiles";
+    referencedColumns: ["id"];
+    isOneToOne: false;
+  },
+];
+
+type TutorialMediaRels = [
+  {
+    foreignKeyName: "tutorial_media_tutorial_id_fkey";
+    columns: ["tutorial_id"];
+    referencedRelation: "tutorials";
+    referencedColumns: ["id"];
+    isOneToOne: false;
+  },
+];
+
 export interface Database {
   public: {
     Tables: {
@@ -223,6 +276,8 @@ export interface Database {
       incident_attachments: TableType<IncidentAttachment, AttachmentRels>;
       audit_log: TableType<AuditLog>;
       notifications: TableType<Notification>;
+      tutorials: TableType<Tutorial, TutorialRels>;
+      tutorial_media: TableType<TutorialMedia, TutorialMediaRels>;
     };
     Views: Record<string, never>;
     Functions: {

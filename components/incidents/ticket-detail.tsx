@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -24,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, PriorityBadge } from "@/components/incidents/badges";
 import { CommentForm } from "@/components/incidents/comment-form";
 import { ResolvePanel } from "@/components/incidents/resolve-panel";
+import { MediaGrid } from "@/components/media/media-grid";
 import {
   assignToMeAction,
   updateStatusAction,
@@ -176,39 +176,13 @@ export async function TicketDetail({
                   icon={Paperclip}
                   title={`Anexos (${attachments.length})`}
                 />
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {attachments.map((a) => {
-                    const url = signed[a.storage_path];
-                    const isImage = a.mime_type.startsWith("image/");
-                    return (
-                      <a
-                        key={a.id}
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group block overflow-hidden rounded-lg border border-border transition-colors hover:border-navy-300"
-                      >
-                        {isImage && url ? (
-                          <Image
-                            src={url}
-                            alt={a.file_name}
-                            width={300}
-                            height={200}
-                            className="h-28 w-full object-cover transition-transform group-hover:scale-105"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="flex h-28 w-full items-center justify-center bg-surface-muted text-faint">
-                            <FileText className="h-7 w-7" />
-                          </span>
-                        )}
-                        <span className="block truncate px-2 py-1.5 text-xs text-muted">
-                          {a.file_name}
-                        </span>
-                      </a>
-                    );
-                  })}
-                </div>
+                <MediaGrid
+                  items={attachments.map((a) => ({
+                    url: signed[a.storage_path],
+                    name: a.file_name,
+                    mime: a.mime_type,
+                  }))}
+                />
               </CardContent>
             </Card>
           )}
@@ -220,7 +194,7 @@ export async function TicketDetail({
                   <CheckCircle2 className="h-[18px] w-[18px]" />
                   {isImprovement ? "Concluir entrega" : "Resolver chamado"}
                 </h2>
-                <ResolvePanel incidentId={inc.id} kind={kind} />
+                <ResolvePanel incidentId={inc.id} userId={profile.id} kind={kind} />
               </CardContent>
             </Card>
           )}
