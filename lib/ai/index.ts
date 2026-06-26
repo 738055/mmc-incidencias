@@ -237,6 +237,76 @@ export async function suggestFromTutorials(
   }
 }
 
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AssistantContext {
+  tutorials: { title: string; content: string | null; category: string | null }[];
+  incidents: { ref: number; title: string; resolution: string | null }[];
+}
+
+/**
+ * Responde a uma conversa do assistente (mascote da MMC) usando RAG: tutoriais e
+ * soluções de chamados resolvidos passados como contexto. Foco em DÚVIDAS DE USO
+ * / PROCESSO; se for um defeito, orienta a abrir um chamado. Retorna null se a IA
+ * não estiver configurada ou em caso de erro.
+ */
+export async function assistantReply(
+  turns: ChatTurn[],
+  context: AssistantContext,
+): Promise<string | null> {
+  const client = getClient();
+  if (!client) return null;
+
+  const tutorialsText = context.tutorials.length
+    ? context.tutorials
+        .map(
+          (t) =>
+            `• ${t.title}${t.category ? ` [${t.category}]` : ""}\n${(t.content ?? "").slice(0, 800)}`,
+        )
+        .join("\n\n")
+    : "(nenhum tutorial relevante encontrado)";
+
+  const incidentsText = context.incidents.length
+    ? context.incidents
+        .map((i) => `#${i.ref} — ${i.title}\nSolução: ${i.resolution ?? ""}`)
+        .join("\n\n")
+    : "(nenhuma solução anterior relevante)";
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      max_tokens: 600,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você é o assistente virtual de suporte da MMC — simpático, direto e em " +
+            "português do Brasil. Ajude o usuário a resolver DÚVIDAS DE USO e de " +
+            "PROCESSO usando os TUTORIAIS e as SOLUÇÕES anteriores fornecidos abaixo. " +
+            "Regras: (1) se um tutorial cobrir o tema, explique o passo a passo e cite " +
+            "o título do tutorial; (2) se parecer um DEFEITO do sistema (bug), diga que " +
+            "o melhor é abrir um chamado em Incidências; (3) se não houver base " +
+            "suficiente, seja honesto e sugira abrir um chamado; (4) seja conciso. " +
+            "Nunca invente passos que não estejam no material.\n\n" +
+            `TUTORIAIS:\n${tutorialsText}\n\nSOLUÇÕES ANTERIORES:\n${incidentsText}`,
+        },
+        ...turns.slice(-10).map((t) => ({
+          role: t.role,
+          content: t.content.slice(0, 2000),
+        })),
+      ],
+    });
+
+    return extractText(completion);
+  } catch (err) {
+    console.error("[ai] assistantReply:", err);
+    return null;
+  }
+}
+
 function extractText(
   completion: OpenAI.Chat.Completions.ChatCompletion,
 ): string | null {

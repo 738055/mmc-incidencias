@@ -8,6 +8,7 @@ import {
   Rocket,
   BookOpen,
   GraduationCap,
+  Bot,
   Server,
   Users,
   Building2,
@@ -24,6 +25,7 @@ const baseNav = [
   { href: "/melhorias", label: "Melhorias", icon: Rocket },
   { href: "/base-conhecimento", label: "Base de conhecimento", icon: BookOpen },
   { href: "/tutoriais", label: "Tutoriais", icon: GraduationCap },
+  { href: "/assistente", label: "Assistente IA", icon: Bot },
 ];
 
 const adminNav = [
