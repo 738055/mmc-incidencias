@@ -95,7 +95,7 @@ export async function TicketDetail({
   const done = isDoneStatus(inc.status);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <Link
         href={backHref}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-navy-700"
@@ -113,7 +113,7 @@ export async function TicketDetail({
               {isImprovement ? "Melhoria" : "Incidência"}
             </span>
           </div>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-navy-700">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-navy-700 md:text-4xl">
             {inc.title}
           </h1>
           <p className="mt-1 text-sm text-muted">
@@ -154,9 +154,8 @@ export async function TicketDetail({
 
           {inc.ai_analysis && (
             <Card className="relative overflow-hidden">
-              <span className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-orange-500/10" />
               <CardContent className="relative pt-5">
-                <h2 className="mb-4 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-navy-700">
+                <h2 className="mb-4 flex items-center gap-2 border-b border-border pb-3 text-xl font-bold text-navy-700">
                   <Sparkles className="h-[18px] w-[18px] text-orange-600" />
                   Análise da IA
                 </h2>
@@ -257,10 +256,10 @@ export async function TicketDetail({
           </Card>
         </div>
 
-        <div className="space-y-6 lg:col-span-4">
+        <div className="flex flex-col gap-6 lg:col-span-4">
           <Card>
             <CardContent className="space-y-4 pt-5 text-sm">
-              <h2 className="border-b border-border pb-3 text-base font-semibold text-navy-700">
+              <h2 className="border-b border-border pb-3 text-xl font-bold text-navy-700">
                 Detalhes
               </h2>
               <Detail
@@ -307,9 +306,9 @@ export async function TicketDetail({
           </Card>
 
           {staff && (
-            <Card>
+            <Card className="order-first">
               <CardContent className="space-y-3 pt-5">
-                <h2 className="border-b border-border pb-3 text-base font-semibold text-navy-700">
+                <h2 className="border-b border-border pb-3 text-xl font-bold text-navy-700">
                   Ações
                 </h2>
 
@@ -361,7 +360,7 @@ function SectionHeader({
   title: string;
 }) {
   return (
-    <h2 className="mb-4 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-navy-700">
+    <h2 className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-xl font-bold text-navy-700">
       <Icon className="h-[18px] w-[18px] text-navy-700" />
       {title}
     </h2>

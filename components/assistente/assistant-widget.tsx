@@ -15,7 +15,7 @@ export function AssistantWidget({ firstName }: { firstName?: string }) {
   return (
     <>
       {open && (
-        <div className="fixed bottom-24 right-4 z-50 flex h-[70vh] max-h-[640px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl sm:right-6">
+        <div className="fixed bottom-24 right-4 z-50 flex h-[70vh] max-h-[640px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-[0_18px_45px_rgba(0,23,54,0.22)] sm:right-6">
           <AssistantChat firstName={firstName} />
         </div>
       )}

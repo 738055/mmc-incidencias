@@ -11,7 +11,6 @@ export default function AuthLayout({
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Lado da marca */}
       <div className="brand-gradient relative hidden flex-col justify-between overflow-hidden p-10 text-white lg:flex">
-        <div className="pointer-events-none absolute -right-24 top-10 h-80 w-80 rounded-full bg-orange-500/20 blur-3xl" />
         <Link href="/">
           <Logo variant="light" />
         </Link>

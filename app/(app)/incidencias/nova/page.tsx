@@ -17,7 +17,7 @@ export default async function NewIncidentPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-6">
       <Link
         href="/incidencias"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-navy-700"
@@ -26,8 +26,10 @@ export default async function NewIncidentPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-navy-700">Abrir chamado</h1>
-        <p className="text-sm text-muted">
+        <h1 className="text-3xl font-bold tracking-tight text-navy-700">
+          Abrir chamado
+        </h1>
+        <p className="mt-1 text-base text-muted">
           Descreva o problema. A IA buscará soluções de chamados parecidos e
           poderá analisar imagens anexadas.
         </p>

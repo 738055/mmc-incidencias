@@ -17,7 +17,7 @@ export default async function NewImprovementPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-6">
       <Link
         href="/melhorias"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-navy-700"
@@ -26,10 +26,10 @@ export default async function NewImprovementPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-navy-700">
+        <h1 className="text-3xl font-bold tracking-tight text-navy-700">
           Solicitar melhoria / desenvolvimento
         </h1>
-        <p className="text-sm text-muted">
+        <p className="mt-1 text-base text-muted">
           Descreva a evolução desejada no sistema. A solicitação passa por
           análise e aprovação antes do desenvolvimento.
         </p>

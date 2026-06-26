@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Building2, Mail } from "lucide-react";
+import { Building2, PlusCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { AdminTabs } from "@/components/admin/admin-tabs";
+import { StatusPill } from "@/components/admin/status-pill";
+import { Th } from "@/components/admin/table";
 import {
   createCompanyAction,
   toggleCompanyAction,
@@ -23,27 +25,42 @@ export default async function CompaniesPage() {
     .from("companies")
     .select("*")
     .order("name");
+  const total = companies?.length ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-7">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-navy-700">
-          <Building2 className="h-6 w-6" /> Empresas parceiras
+        <h1 className="text-3xl font-bold tracking-tight text-navy-700">
+          Administração
         </h1>
-        <p className="text-sm text-muted">
-          Fornecedores que atendem incidências. Recebem o chamado por e-mail
-          quando direcionado a eles.
+        <p className="mt-1 text-base text-muted">
+          Gerencie sistemas, empresas parceiras e usuários.
         </p>
       </div>
 
-      <Card>
-        <CardContent className="pt-5">
-          <form action={createCompanyAction} className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="name">Nome da empresa</Label>
-                <Input id="name" name="name" required placeholder="Ex.: Onasys" />
-              </div>
+      <AdminTabs />
+
+      <div>
+        <div className="flex items-center gap-3 text-navy-700">
+          <Building2 className="h-6 w-6" />
+          <h2 className="text-2xl font-bold">Empresas parceiras</h2>
+          <span className="font-label text-xs text-muted">({total})</span>
+        </div>
+        <p className="mt-2 text-sm text-muted">
+          Fornecedores que atendem incidências. Recebem o chamado por e-mail quando
+          direcionado a eles.
+        </p>
+      </div>
+
+      <details className="group overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-card)]">
+        <summary className="flex cursor-pointer items-center gap-2 px-6 py-4 text-sm font-semibold text-navy-700 marker:content-['']">
+          <PlusCircle className="h-4 w-4 text-orange-700" /> Adicionar empresa
+        </summary>
+        <CardContent className="border-t border-border pt-5">
+          <form action={createCompanyAction} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome da empresa</Label>
+              <Input id="name" name="name" required placeholder="Ex.: Onasys" />
             </div>
             <div>
               <Label htmlFor="contactEmails">E-mails de contato</Label>
@@ -64,51 +81,68 @@ export default async function CompaniesPage() {
             </div>
           </form>
         </CardContent>
-      </Card>
+      </details>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {companies?.map((c) => (
-          <Card key={c.id} className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-semibold text-navy-700">{c.name}</p>
-                <Badge
-                  className={`mt-1 ${
-                    c.active
-                      ? "bg-green-50 text-green-700 ring-green-200"
-                      : "bg-gray-100 text-gray-500 ring-gray-200"
-                  }`}
-                >
-                  {c.active ? "Ativa" : "Inativa"}
-                </Badge>
-              </div>
-              <form action={toggleCompanyAction}>
-                <input type="hidden" name="id" value={c.id} />
-                <input type="hidden" name="active" value={String(c.active)} />
-                <Button type="submit" variant="ghost" size="sm">
-                  {c.active ? "Desativar" : "Ativar"}
-                </Button>
-              </form>
-            </div>
-            <div className="mt-3 space-y-1">
-              {c.contact_emails?.length ? (
-                c.contact_emails.map((e) => (
-                  <p key={e} className="flex items-center gap-1.5 text-xs text-muted">
-                    <Mail className="h-3.5 w-3.5" /> {e}
-                  </p>
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-border bg-surface-muted">
+                <Th>Empresa</Th>
+                <Th>E-mails de contato</Th>
+                <Th>Status</Th>
+                <Th className="text-right">Ações</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {companies && companies.length > 0 ? (
+                companies.map((c) => (
+                  <tr
+                    key={c.id}
+                    className="border-b border-border transition-colors last:border-0 hover:bg-surface-muted/70"
+                  >
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3 font-semibold text-navy-700">
+                        <span className="grid h-10 w-10 place-items-center rounded-lg bg-navy-100 text-navy-700">
+                          <Building2 className="h-5 w-5" />
+                        </span>
+                        {c.name}
+                      </div>
+                    </td>
+                    <td className="max-w-xs px-6 py-5 text-muted">
+                      {c.contact_emails?.length ? (
+                        <span className="line-clamp-2 break-words">
+                          {c.contact_emails.join(", ")}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-6 py-5">
+                      <StatusPill active={c.active} labels={["Ativa", "Inativa"]} />
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <form action={toggleCompanyAction}>
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="active" value={String(c.active)} />
+                        <Button type="submit" variant="ghost" size="sm">
+                          {c.active ? "Desativar" : "Ativar"}
+                        </Button>
+                      </form>
+                    </td>
+                  </tr>
                 ))
               ) : (
-                <p className="text-xs text-muted">Sem e-mails cadastrados.</p>
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-muted">
+                    Nenhuma empresa cadastrada.
+                  </td>
+                </tr>
               )}
-            </div>
-          </Card>
-        ))}
-        {(!companies || companies.length === 0) && (
-          <Card className="md:col-span-2 p-10 text-center text-sm text-muted">
-            Nenhuma empresa cadastrada.
-          </Card>
-        )}
-      </div>
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

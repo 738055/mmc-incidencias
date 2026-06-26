@@ -60,7 +60,6 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(6);
 
-  // Volume dos últimos 7 dias (só faz sentido p/ equipe, que enxerga tudo).
   const staff = isStaff(profile.role);
   let week: { label: string; count: number }[] = [];
   if (staff) {
@@ -87,30 +86,71 @@ export default async function DashboardPage() {
       return { label, count };
     });
   }
+
   const weekMax = Math.max(1, ...week.map((d) => d.count));
-  const weekTotal = week.reduce((s, d) => s + d.count, 0);
+  const weekTotal = week.reduce((sum, d) => sum + d.count, 0);
+  const chartPoints = week
+    .map((d, i) => {
+      const x = week.length <= 1 ? 50 : (i / (week.length - 1)) * 100;
+      const y = 88 - (d.count / weekMax) * 66;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+  const chartArea = chartPoints ? `0,96 ${chartPoints} 100,96` : "";
 
   const metrics = [
-    { label: "Abertos", value: open, icon: Ticket, accent: "bg-status-open", chip: "bg-status-open/10 text-status-open", href: "/incidencias?status=open" },
-    { label: "Em andamento", value: inProgress, icon: Loader, accent: "bg-orange-500", chip: "bg-orange-500/10 text-orange-600", href: "/incidencias?status=in_progress" },
-    { label: "Resolvidos", value: resolved, icon: CheckCircle2, accent: "bg-status-resolved", chip: "bg-status-resolved/10 text-status-resolved", href: "/incidencias?status=resolved" },
-    { label: "Melhorias em aberto", value: improvements, icon: Rocket, accent: "bg-navy-700", chip: "bg-navy-700/10 text-navy-700", href: "/melhorias" },
+    {
+      label: "Abertos",
+      value: open,
+      icon: Ticket,
+      accent: "border-l-status-open",
+      chip: "bg-status-open/10 text-status-open",
+      note: "aguardando triagem",
+      href: "/incidencias?status=open",
+    },
+    {
+      label: "Em andamento",
+      value: inProgress,
+      icon: Loader,
+      accent: "border-l-orange-500",
+      chip: "bg-orange-500/10 text-orange-700",
+      note: "em tratativa",
+      href: "/incidencias?status=in_progress",
+    },
+    {
+      label: "Resolvidos",
+      value: resolved,
+      icon: CheckCircle2,
+      accent: "border-l-status-resolved",
+      chip: "bg-status-resolved/10 text-status-resolved",
+      note: "base para reaproveitar",
+      href: "/incidencias?status=resolved",
+    },
+    {
+      label: "Melhorias",
+      value: improvements,
+      icon: Rocket,
+      accent: "border-l-navy-700",
+      chip: "bg-navy-700/10 text-navy-700",
+      note: "pipeline aberto",
+      href: "/melhorias",
+    },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-navy-700">
-            Olá, {profile.full_name?.split(" ")[0] || "bem-vindo"} 👋
+          <h1 className="text-3xl font-bold tracking-tight text-navy-700 md:text-4xl">
+            Olá, {profile.full_name?.split(" ")[0] || "bem-vindo"}
           </h1>
-          <p className="mt-1 text-sm text-muted">
-            {isStaff(profile.role)
-              ? "Acompanhe e resolva as incidências do time."
+          <p className="mt-2 text-base text-muted">
+            {staff
+              ? "Aqui está o status atual do ambiente de TI."
               : "Acompanhe seus chamados e abra novas solicitações."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
             <Link href="/melhorias/nova">Nova melhoria</Link>
           </Button>
@@ -120,110 +160,135 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Métricas */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((m) => (
           <Link key={m.label} href={m.href} className="group">
-            <Card className="relative overflow-hidden p-5 transition-all hover:border-navy-300 hover:shadow-[var(--shadow-card-hover)]">
-              <span className={`absolute inset-y-0 left-0 w-1 ${m.accent}`} />
-              <div className="flex items-start justify-between">
-                <span className="font-label text-[11px] font-medium uppercase tracking-wider text-muted">
+            <Card
+              className={`h-full border-l-4 ${m.accent} p-6 transition-all hover:border-navy-300 hover:shadow-[var(--shadow-card-hover)]`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <span className="font-label text-[12px] font-medium uppercase text-muted">
                   {m.label}
                 </span>
-                <span className={`grid h-8 w-8 place-items-center rounded-full ${m.chip}`}>
-                  <m.icon className="h-[18px] w-[18px]" />
+                <span className={`grid h-10 w-10 place-items-center rounded-full ${m.chip}`}>
+                  <m.icon className="h-5 w-5" />
                 </span>
               </div>
-              <p className="mt-4 text-4xl font-bold tracking-tight text-navy-700">
-                {m.value}
-              </p>
+              <div className="mt-7 flex items-end gap-2">
+                <p className="text-4xl font-bold tracking-tight text-navy-700">
+                  {m.value}
+                </p>
+                <p className="pb-1 text-sm text-muted">{m.note}</p>
+              </div>
             </Card>
           </Link>
         ))}
       </div>
 
-      {/* Volume da semana (equipe) */}
-      {staff && (
-        <Card className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 font-semibold text-navy-700">
-              <BarChart3 className="h-5 w-5 text-orange-600" /> Volume da semana
-            </h2>
-            <span className="text-xs text-muted">
-              {weekTotal} chamado{weekTotal === 1 ? "" : "s"} nos últimos 7 dias
-            </span>
-          </div>
-          <div className="mt-6 grid grid-cols-7 gap-2 sm:gap-3">
-            {week.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                <div className="flex h-32 w-full items-end">
-                  <div
-                    className="w-full rounded-t-md bg-gradient-to-t from-navy-700 to-navy-400 transition-all"
-                    style={{
-                      height: `${Math.round((d.count / weekMax) * 100)}%`,
-                      minHeight: d.count > 0 ? "10px" : "3px",
-                    }}
-                    title={`${d.count} chamado(s)`}
-                  />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div className="space-y-6">
+          {staff && (
+            <Card className="overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5">
+                <h2 className="flex items-center gap-3 text-2xl font-bold text-navy-700">
+                  <BarChart3 className="h-6 w-6 text-orange-700" />
+                  Volume da semana
+                </h2>
+                <div className="font-label flex items-center gap-3 text-[12px]">
+                  <span className="rounded-lg border border-border bg-surface-muted px-4 py-2 text-navy-700">
+                    Esta semana
+                  </span>
+                  <span className="text-muted">{weekTotal} chamados</span>
                 </div>
-                <span className="text-sm font-semibold text-navy-700">
-                  {d.count}
-                </span>
-                <span className="font-label text-[10px] uppercase tracking-wider text-faint">
-                  {d.label}
-                </span>
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recentes */}
-        <Card className="lg:col-span-2">
-          <div className="flex items-center justify-between px-5 py-4">
-            <h2 className="font-semibold text-navy-700">Chamados recentes</h2>
-            <Link href="/incidencias" className="text-sm font-medium text-orange-600 hover:underline">
-              Ver todos
-            </Link>
-          </div>
-          <div className="border-t border-border">
-            {recent && recent.length > 0 ? (
-              recent.map((inc) => (
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                <IncidentRow key={inc.id} incident={inc as any} />
-              ))
-            ) : (
-              <p className="px-5 py-10 text-center text-sm text-muted">
-                Nenhum chamado ainda. Que tal{" "}
-                <Link href="/incidencias/nova" className="text-orange-600 hover:underline">
-                  abrir o primeiro
-                </Link>
-                ?
-              </p>
-            )}
-          </div>
-        </Card>
+              <div className="p-6">
+                <div className="relative h-[340px] overflow-hidden rounded-lg bg-surface">
+                  <div className="absolute inset-0 grid grid-rows-5 border-l border-border/70">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className="border-b border-border/55" />
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 grid grid-cols-7">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <span key={i} className="border-r border-border/45 last:border-r-0" />
+                    ))}
+                  </div>
+                  <svg
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 h-full w-full"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="week-area" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#001736" stopOpacity="0.12" />
+                        <stop offset="100%" stopColor="#001736" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <polygon points={chartArea} fill="url(#week-area)" />
+                    <polyline
+                      points={chartPoints}
+                      fill="none"
+                      stroke="#001736"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2.2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                </div>
+                <div className="font-label mt-4 grid grid-cols-7 gap-2 text-center text-[12px] text-muted">
+                  {week.map((d) => (
+                    <div key={d.label}>
+                      <p className="font-semibold text-navy-700">{d.count}</p>
+                      <p className="uppercase">{d.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          )}
 
-        {/* Faixa IA */}
-        <Card className="relative overflow-hidden border-navy-600 bg-navy-700 p-6 text-white shadow-md">
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-orange-500/20 blur-2xl" />
-          <div className="relative">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-orange-500 text-white shadow-sm">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <p className="mt-4 text-lg font-semibold">Suporte com IA</p>
-            <p className="mt-1 text-sm text-navy-200">
-              Ao abrir um chamado, a IA busca soluções de problemas parecidos já
-              resolvidos e analisa as imagens anexadas.
-            </p>
-            <Link
-              href="/base-conhecimento"
-              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
-            >
-              Base de conhecimento <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border px-6 py-5">
+              <h2 className="text-xl font-bold text-navy-700">Chamados recentes</h2>
+              <Link
+                href="/incidencias"
+                className="font-label text-[12px] font-medium text-orange-700 hover:underline"
+              >
+                Ver todos
+              </Link>
+            </div>
+            <div>
+              {recent && recent.length > 0 ? (
+                recent.map((inc) => (
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <IncidentRow key={inc.id} incident={inc as any} />
+                ))
+              ) : (
+                <p className="px-6 py-12 text-center text-sm text-muted">
+                  Nenhum chamado ainda.
+                </p>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        <Card className="bg-navy-700 p-6 text-white shadow-[0_18px_40px_rgba(0,23,54,0.22)]">
+          <span className="grid h-11 w-11 place-items-center rounded-lg bg-white/10 text-white">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <p className="mt-5 text-2xl font-bold">Assistente IA</p>
+          <p className="mt-3 text-sm leading-relaxed text-navy-100">
+            Consulte tutoriais, soluções e chamados resolvidos em linguagem natural.
+          </p>
+          <Link
+            href="/assistente"
+            className="mt-6 inline-flex h-11 w-full items-center justify-between rounded-lg border border-white/20 bg-navy-600/60 px-4 text-sm font-medium text-navy-100 transition-colors hover:bg-navy-600"
+          >
+            Abrir assistente <ArrowRight className="h-4 w-4" />
+          </Link>
         </Card>
       </div>
     </div>

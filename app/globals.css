@@ -31,6 +31,7 @@
 
   /* Tokens semânticos */
   --color-background: #f8f9ff;
+  --color-background-subtle: #f7f8fc;
   --color-surface: #ffffff;
   --color-surface-muted: #f2f3fa; /* surface-container-low */
   --color-surface-sunken: #eceef4; /* surface-container */
@@ -59,25 +60,40 @@
   /* Raio e sombra */
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
-  --shadow-card: 0 4px 24px rgba(0, 23, 54, 0.04);
-  --shadow-card-hover: 0 8px 32px rgba(0, 23, 54, 0.08);
+  --shadow-card: 0 1px 2px rgba(0, 23, 54, 0.04), 0 12px 28px rgba(0, 23, 54, 0.05);
+  --shadow-card-hover: 0 1px 2px rgba(0, 23, 54, 0.06), 0 16px 34px rgba(0, 23, 54, 0.08);
 }
 
 * {
   border-color: var(--color-border);
 }
 
-body {
+html {
   background: var(--color-background);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 70% -20%, rgba(214, 227, 255, 0.4), transparent 32rem),
+    linear-gradient(180deg, var(--color-background) 0%, var(--color-background-subtle) 100%);
   color: var(--color-foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 /* Rótulos/códigos curtos em fonte mono (estilo "label") */
 .font-label {
   font-family: var(--font-mono);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
 /* Faixa de marca reutilizável */
@@ -93,4 +109,9 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--color-navy-200);
   border-radius: 9999px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
 }

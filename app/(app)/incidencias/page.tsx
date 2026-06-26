@@ -56,30 +56,32 @@ export default async function IncidentsPage({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-navy-700">Incidências</h1>
-          <p className="text-sm text-muted">Todos os chamados que você pode ver.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-navy-700">
+            Incidências
+          </h1>
+          <p className="mt-1 text-base text-muted">
+            Todos os chamados que você pode ver.
+          </p>
         </div>
         <Button asChild variant="accent">
           <Link href="/incidencias/nova">Novo chamado</Link>
         </Button>
       </div>
 
-      {/* Busca */}
-      <form className="relative" action="/incidencias">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+      <form className="relative max-w-2xl" action="/incidencias">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-faint" />
         <input
           name="q"
           defaultValue={q ?? ""}
           placeholder="Buscar por título, descrição ou solução..."
-          className="h-11 w-full rounded-lg border border-border bg-surface pl-10 pr-4 text-sm focus-visible:border-navy-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+          className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-12 pr-4 text-sm shadow-sm focus-visible:border-navy-400 focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
         />
         {status && <input type="hidden" name="status" value={status} />}
       </form>
 
-      {/* Filtros */}
       <div className="flex flex-wrap gap-2">
         {filters.map((f) => {
           const active = (status ?? "") === f.key;
@@ -88,7 +90,7 @@ export default async function IncidentsPage({
               key={f.key || "all"}
               href={filterHref(f.key)}
               className={cn(
-                "rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 ring-inset transition-colors",
+                "font-label rounded-lg px-4 py-2 text-[12px] font-medium ring-1 ring-inset transition-colors",
                 active
                   ? "bg-navy-700 text-white ring-navy-700"
                   : "bg-surface text-muted ring-border hover:bg-navy-50",
@@ -100,15 +102,15 @@ export default async function IncidentsPage({
         })}
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         {incidents && incidents.length > 0 ? (
           incidents.map((inc) => (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             <IncidentRow key={inc.id} incident={inc as any} />
           ))
         ) : (
-          <p className="px-5 py-14 text-center text-sm text-muted">
-            Nenhum chamado encontrado{q ? ` para “${q}”` : ""}.
+          <p className="px-6 py-14 text-center text-sm text-muted">
+            Nenhum chamado encontrado{q ? ` para "${q}"` : ""}.
           </p>
         )}
       </Card>

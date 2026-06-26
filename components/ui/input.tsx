@@ -8,7 +8,7 @@ export const Input = React.forwardRef<
   <input
     ref={ref}
     className={cn(
-      "flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm",
+      "flex h-11 w-full rounded-lg border border-border bg-surface px-3.5 py-2 text-sm shadow-sm",
       "placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-600 focus-visible:border-navy-600",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
@@ -25,7 +25,7 @@ export const Textarea = React.forwardRef<
   <textarea
     ref={ref}
     className={cn(
-      "flex min-h-24 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm",
+      "flex min-h-24 w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm shadow-sm",
       "placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-600 focus-visible:border-navy-600",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
@@ -42,7 +42,7 @@ export const Select = React.forwardRef<
   <select
     ref={ref}
     className={cn(
-      "flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm",
+      "flex h-11 w-full rounded-lg border border-border bg-surface px-3.5 py-2 text-sm shadow-sm",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-600 focus-visible:border-navy-600",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
@@ -59,7 +59,7 @@ export function Label({
   return (
     <label
       className={cn(
-        "mb-1.5 block text-sm font-medium text-foreground",
+        "font-label mb-1.5 block text-[12px] font-medium uppercase text-muted",
         className,
       )}
       {...props}

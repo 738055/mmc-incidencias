@@ -99,11 +99,11 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-surface">
       {/* Cabeçalho com o mascote */}
-      <div className="flex items-center gap-3 border-b border-border bg-surface-muted px-5 py-3">
+      <div className="flex items-center gap-3 border-b border-navy-600 bg-navy-700 px-5 py-4 text-white">
         <MascotAvatar state={mascot} size={56} />
         <div>
-          <p className="font-semibold text-navy-700">Bugzito</p>
-          <p className="text-xs text-muted">
+          <p className="font-semibold text-white">Bugzito</p>
+          <p className="text-xs text-navy-100">
             {loading ? "pensando…" : "tire dúvidas de uso e processos"}
           </p>
         </div>
@@ -121,10 +121,10 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
           >
             <div
               className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                "max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
                 m.role === "user"
-                  ? "bg-navy-700 text-white"
-                  : "border border-border bg-surface-muted text-foreground",
+                  ? "rounded-tr-none bg-navy-700 text-white"
+                  : "rounded-tl-none border border-border bg-surface-muted text-foreground",
               )}
             >
               <p className="whitespace-pre-wrap">{m.content}</p>
@@ -166,12 +166,12 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pergunte algo… ex.: como emito uma reserva?"
-          className="h-11 flex-1 rounded-full border border-border bg-surface-muted px-4 text-sm focus-visible:border-navy-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-600"
+          className="h-11 flex-1 rounded-lg border border-border bg-surface-muted px-4 text-sm focus-visible:border-navy-600 focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-600"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="grid h-11 w-11 place-items-center rounded-full bg-orange-500 text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="grid h-11 w-11 place-items-center rounded-lg bg-orange-700 text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
         >
           <Send className="h-5 w-5" />
         </button>

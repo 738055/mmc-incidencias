@@ -12,7 +12,7 @@ import {
   Server,
   Users,
   Building2,
-  PlusCircle,
+  Plus,
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,8 @@ const adminNav = [
   { href: "/admin", label: "Usuários", icon: Users },
 ];
 
+type NavIcon = typeof Ticket;
+
 export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
 
@@ -44,48 +46,49 @@ export function Sidebar({ role }: { role: UserRole }) {
   }: {
     href: string;
     label: string;
-    icon: typeof Ticket;
+    icon: NavIcon;
   }) {
     const active = pathname === href || pathname.startsWith(`${href}/`);
     return (
       <Link
         href={href}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors",
+          "font-label flex min-h-12 items-center gap-3 rounded-lg px-4 text-[15px] font-medium transition-colors",
           active
-            ? "bg-orange-500 font-semibold text-white shadow-sm"
-            : "font-medium text-navy-200 hover:bg-navy-600/50 hover:text-white",
+            ? "bg-orange-700 text-white shadow-sm"
+            : "text-navy-200 hover:bg-navy-600/55 hover:text-white",
         )}
       >
-        <Icon className="h-[18px] w-[18px]" />
-        {label}
+        <Icon
+          className={cn(
+            "h-5 w-5 shrink-0",
+            active ? "text-white" : "text-navy-200",
+          )}
+        />
+        <span className="truncate">{label}</span>
       </Link>
     );
   }
 
   return (
-    <aside className="hidden w-72 shrink-0 flex-col bg-navy-700 p-4 lg:flex">
-      <div className="mb-6 flex h-12 items-center px-2">
-        <Link href="/dashboard">
-          <Logo variant="light" />
-        </Link>
-      </div>
-
-      <Link
-        href="/incidencias/nova"
-        className="mb-6 flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-      >
-        <PlusCircle className="h-4 w-4" /> Novo chamado
+    <aside className="sticky top-0 hidden h-screen w-[280px] shrink-0 flex-col border-r border-navy-600/40 bg-navy-800 px-5 py-7 lg:flex">
+      <Link href="/dashboard" className="mb-9 block">
+        <Logo
+          variant="light"
+          title="MMC Portal"
+          subtitle="IT Management"
+          className="[&>span:first-child]:bg-navy-600/80"
+        />
       </Link>
 
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-2">
         {baseNav.map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
 
         {isStaff(role) && (
           <>
-            <p className="font-label px-4 pb-1 pt-5 text-[11px] font-medium uppercase tracking-wider text-navy-300/70">
+            <p className="font-label px-4 pb-1 pt-5 text-[11px] font-medium uppercase text-navy-300/75">
               Administração
             </p>
             {adminNav.map((item) => (
@@ -95,8 +98,13 @@ export function Sidebar({ role }: { role: UserRole }) {
         )}
       </nav>
 
-      <div className="mt-auto border-t border-navy-500/40 px-2 pt-4 text-[11px] text-navy-300/70">
-        MMC Incidências · v1.0
+      <div className="mt-8 border-t border-navy-500/40 pt-5">
+        <Link
+          href="/incidencias/nova"
+          className="font-label flex min-h-12 items-center justify-center gap-3 rounded-lg bg-orange-700 px-4 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600"
+        >
+          <Plus className="h-5 w-5" /> Novo chamado
+        </Link>
       </div>
     </aside>
   );

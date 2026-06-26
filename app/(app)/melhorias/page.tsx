@@ -56,13 +56,13 @@ export default async function ImprovementsPage({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-navy-700">
-            <Rocket className="h-6 w-6" /> Melhorias & Desenvolvimento
+          <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-navy-700">
+            <Rocket className="h-7 w-7" /> Melhorias & Desenvolvimento
           </h1>
-          <p className="text-sm text-muted">
+          <p className="mt-1 text-base text-muted">
             Pedidos para evoluir e aprimorar os sistemas dos stakeholders.
           </p>
         </div>
@@ -71,13 +71,13 @@ export default async function ImprovementsPage({
         </Button>
       </div>
 
-      <form className="relative" action="/melhorias">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+      <form className="relative max-w-2xl" action="/melhorias">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-faint" />
         <input
           name="q"
           defaultValue={q ?? ""}
           placeholder="Buscar por título, descrição ou entrega..."
-          className="h-11 w-full rounded-lg border border-border bg-surface pl-10 pr-4 text-sm focus-visible:border-navy-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+          className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-12 pr-4 text-sm shadow-sm focus-visible:border-navy-400 focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
         />
         {status && <input type="hidden" name="status" value={status} />}
       </form>
@@ -90,7 +90,7 @@ export default async function ImprovementsPage({
               key={f.key || "all"}
               href={filterHref(f.key)}
               className={cn(
-                "rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 ring-inset transition-colors",
+                "font-label rounded-lg px-4 py-2 text-[12px] font-medium ring-1 ring-inset transition-colors",
                 active
                   ? "bg-navy-700 text-white ring-navy-700"
                   : "bg-surface text-muted ring-border hover:bg-navy-50",
@@ -102,15 +102,15 @@ export default async function ImprovementsPage({
         })}
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         {items && items.length > 0 ? (
           items.map((inc) => (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             <IncidentRow key={inc.id} incident={inc as any} basePath="/melhorias" />
           ))
         ) : (
-          <p className="px-5 py-14 text-center text-sm text-muted">
-            Nenhuma melhoria encontrada{q ? ` para “${q}”` : ""}.
+          <p className="px-6 py-14 text-center text-sm text-muted">
+            Nenhuma melhoria encontrada{q ? ` para "${q}"` : ""}.
           </p>
         )}
       </Card>

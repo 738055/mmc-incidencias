@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, User, Search, Bell, HelpCircle } from "lucide-react";
+import { LogOut, User, Search, Bell, HelpCircle, Settings } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS } from "@/lib/domain";
@@ -20,55 +20,64 @@ export async function Topbar({ profile }: { profile: Profile }) {
   const unread = count ?? 0;
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-surface/90 px-5 backdrop-blur lg:px-8">
-      <div className="lg:hidden">
-        <Link href="/incidencias/nova" className="text-sm font-semibold text-orange-600">
+    <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-border-strong/50 bg-background/95 px-5 backdrop-blur lg:px-8">
+      <div className="flex min-w-0 items-center gap-3">
+        <Link
+          href="/incidencias/nova"
+          className="font-label inline-flex h-10 items-center rounded-lg bg-orange-700 px-3 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600 lg:hidden"
+        >
           + Novo chamado
         </Link>
-      </div>
 
-      <Link
-        href="/incidencias"
-        className="hidden h-9 w-72 items-center gap-2 rounded-full border border-border bg-surface-muted px-4 text-sm text-faint transition-colors hover:border-navy-300 lg:flex"
-      >
-        <Search className="h-4 w-4" />
-        Buscar chamados…
-      </Link>
+        <Link
+          href="/incidencias"
+          className="hidden h-12 w-[min(28rem,42vw)] items-center gap-3 rounded-lg border border-border bg-surface-muted px-4 text-sm text-muted shadow-sm transition-colors hover:border-navy-300 hover:bg-surface md:flex"
+        >
+          <Search className="h-5 w-5 shrink-0 text-faint" />
+          <span className="truncate">Buscar chamados, soluções...</span>
+        </Link>
+      </div>
 
       <div className="flex items-center gap-1.5">
         <Link
           href="/base-conhecimento"
           title="Base de conhecimento"
-          className="hidden h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-surface-muted hover:text-navy-700 sm:grid"
+          className="hidden h-10 w-10 place-items-center rounded-full text-foreground transition-colors hover:bg-surface-muted sm:grid"
         >
-          <HelpCircle className="h-[18px] w-[18px]" />
+          <HelpCircle className="h-5 w-5" />
         </Link>
+        {profile.role === "admin" && (
+          <Link
+            href="/admin"
+            title="Administração"
+            className="hidden h-10 w-10 place-items-center rounded-full text-foreground transition-colors hover:bg-surface-muted sm:grid"
+          >
+            <Settings className="h-5 w-5" />
+          </Link>
+        )}
         <Link
           href="/notificacoes"
           title="Notificações"
-          className="relative grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-surface-muted hover:text-navy-700"
+          className="relative grid h-10 w-10 place-items-center rounded-full text-foreground transition-colors hover:bg-surface-muted"
         >
-          <Bell className="h-[18px] w-[18px]" />
+          <Bell className="h-5 w-5" />
           {unread > 0 && (
-            <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold leading-none text-white">
-              {unread > 9 ? "9+" : unread}
-            </span>
+            <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-status-critical" />
           )}
         </Link>
-        <span className="mx-1 hidden h-6 w-px bg-border sm:block" />
 
         <Link
           href="/perfil"
-          className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-muted"
+          className="ml-1 flex items-center gap-2.5 rounded-full px-1.5 py-1 transition-colors hover:bg-surface-muted"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-navy-700 text-sm font-semibold text-white">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-navy-700 text-sm font-bold text-white shadow-sm ring-2 ring-white">
             {initials || <User className="h-4 w-4" />}
           </span>
-          <span className="hidden text-left sm:block">
-            <span className="block text-sm font-medium leading-tight text-foreground">
+          <span className="hidden min-w-0 text-left xl:block">
+            <span className="block max-w-40 truncate text-sm font-semibold leading-tight text-foreground">
               {profile.full_name || "Sem nome"}
             </span>
-            <span className="block text-xs text-muted">
+            <span className="font-label block text-[10px] text-muted">
               {ROLE_LABELS[profile.role]}
             </span>
           </span>
@@ -78,9 +87,9 @@ export async function Topbar({ profile }: { profile: Profile }) {
           <button
             type="submit"
             title="Sair"
-            className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-red-50 hover:text-red-600"
+            className="grid h-10 w-10 place-items-center rounded-full text-muted transition-colors hover:bg-red-50 hover:text-red-600"
           >
-            <LogOut className="h-[18px] w-[18px]" />
+            <LogOut className="h-5 w-5" />
           </button>
         </form>
       </div>
