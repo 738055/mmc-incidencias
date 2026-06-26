@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 
 /**
  * Modelo OpenAI usado para visão + texto. `gpt-4o-mini` é multimodal, rápido e
@@ -49,6 +49,40 @@ export interface SimilarIncident {
   ref: number;
   title: string;
   resolution: string | null;
+}
+
+export interface TutorialMatch {
+  title: string;
+  content: string | null;
+  category: string | null;
+}
+
+/** Limite de tamanho de áudio aceito pela transcrição da OpenAI (25 MB). */
+export const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
+
+/**
+ * Transcreve o áudio de um arquivo (vídeo MP4/WebM ou áudio) via OpenAI.
+ * Retorna null se a IA não estiver configurada, o arquivo for grande demais
+ * (>25 MB) ou em caso de erro. A transcrição é só de áudio (não "vê" a tela).
+ */
+export async function transcribeAudio(
+  file: Blob,
+  filename: string,
+): Promise<string | null> {
+  const client = getClient();
+  if (!client) return null;
+  if (file.size > TRANSCRIBE_MAX_BYTES) return null;
+
+  try {
+    const res = await client.audio.transcriptions.create({
+      model: process.env.OPENAI_TRANSCRIBE_MODEL || "whisper-1",
+      file: await toFile(file, filename),
+    });
+    return res.text?.trim() || null;
+  } catch (err) {
+    console.error("[ai] transcribeAudio:", err);
+    return null;
+  }
 }
 
 /**
@@ -144,6 +178,61 @@ export async function suggestFromSimilar(
     return text;
   } catch (err) {
     console.error("[ai] suggestFromSimilar:", err);
+    return null;
+  }
+}
+
+/**
+ * Avalia se a solicitação é, na verdade, uma DÚVIDA DE USO / FALTA DE PROCESSO
+ * (não um defeito do sistema) e, se houver tutorial que ensine o tema, aponta-o.
+ * Retorna null se a IA não estiver configurada, não houver tutoriais, ou se for
+ * claramente um defeito.
+ */
+export async function suggestFromTutorials(
+  current: { title: string; description: string },
+  tutorials: TutorialMatch[],
+): Promise<string | null> {
+  const client = getClient();
+  if (!client || tutorials.length === 0) return null;
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      max_tokens: 500,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você faz a triagem de chamados de suporte da MMC. Existem TUTORIAIS que " +
+            "ensinam a operar/usar os sistemas. Avalie se o pedido do usuário é, na " +
+            "verdade, uma DÚVIDA DE USO ou FALTA DE PROCESSO/CONHECIMENTO (ou seja, " +
+            "NÃO é um defeito/bug do sistema, mas sim a pessoa não saber como executar " +
+            "a função). Se for esse o caso e algum tutorial cobrir o tema, responda em " +
+            "português, curto: deixe claro que provavelmente NÃO é um defeito e indique " +
+            "o tutorial pelo título, resumindo o que ele ensina. Se for claramente um " +
+            "defeito do sistema, ou se nenhum tutorial servir, responda exatamente " +
+            "'SEM_SUGESTAO'.",
+        },
+        {
+          role: "user",
+          content:
+            `SOLICITAÇÃO DO USUÁRIO:\nTítulo: ${current.title}\nDescrição: ${current.description}\n\n` +
+            `TUTORIAIS DISPONÍVEIS:\n` +
+            tutorials
+              .map(
+                (t) =>
+                  `• ${t.title}${t.category ? ` [${t.category}]` : ""}\n${(t.content ?? "").slice(0, 600)}`,
+              )
+              .join("\n\n"),
+        },
+      ],
+    });
+
+    const text = extractText(completion);
+    if (!text || text.includes("SEM_SUGESTAO")) return null;
+    return text;
+  } catch (err) {
+    console.error("[ai] suggestFromTutorials:", err);
     return null;
   }
 }

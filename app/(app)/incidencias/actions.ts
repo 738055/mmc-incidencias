@@ -23,8 +23,10 @@ import { sendIncidentEmail } from "@/lib/email/send";
 import {
   analyzeIncidentImages,
   suggestFromSimilar,
+  suggestFromTutorials,
   embedText,
   type SimilarIncident,
+  type TutorialMatch,
 } from "@/lib/ai";
 import { notify } from "@/lib/notifications";
 
@@ -125,13 +127,19 @@ export async function createIncidentAction(
       `${parsed.data.title}\n\n${parsed.data.description}`,
     );
 
-    const [imageAnalysis, similar] = await Promise.all([
+    const [imageAnalysis, similar, tutorials] = await Promise.all([
       analyzeIncidentImages(imageUrls, parsed.data),
       findSimilar(supabase, parsed.data, embedding, incident.id),
+      findTutorials(supabase, embedding, parsed.data.title),
     ]);
-    const suggestion = await suggestFromSimilar(parsed.data, similar);
+    const [suggestion, tutorialHint] = await Promise.all([
+      suggestFromSimilar(parsed.data, similar),
+      suggestFromTutorials(parsed.data, tutorials),
+    ]);
 
     const blocks = [
+      tutorialHint &&
+        `📘 Possível dúvida de uso / processo (não parece um defeito):\n${tutorialHint}`,
       suggestion && `💡 Sugestão (solicitações parecidas):\n${suggestion}`,
       imageAnalysis && `🖼️ Análise das imagens:\n${imageAnalysis}`,
     ].filter(Boolean);
@@ -219,6 +227,37 @@ async function findSimilar(
     }
   }
   return findSimilarResolvedFTS(supabase, current.title);
+}
+
+/**
+ * Encontra tutoriais relevantes para a solicitação (busca semântica via RPC
+ * `match_tutorials`; cai para full-text). Alimenta a detecção de "dúvida de uso".
+ */
+async function findTutorials(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  embedding: number[] | null,
+  title: string,
+): Promise<TutorialMatch[]> {
+  if (embedding) {
+    const { data, error } = await supabase.rpc("match_tutorials", {
+      query_embedding: `[${embedding.join(",")}]`,
+      match_count: 4,
+      similarity_threshold: 0.35,
+    });
+    if (!error && data && data.length > 0) {
+      return data.map((d) => ({
+        title: d.title,
+        content: d.content,
+        category: d.category,
+      }));
+    }
+  }
+  const { data } = await supabase
+    .from("tutorials")
+    .select("title, content, category")
+    .textSearch("search", title, { type: "websearch", config: "portuguese" })
+    .limit(4);
+  return data ?? [];
 }
 
 /** Fallback: busca full-text (português) por chamados resolvidos parecidos. */

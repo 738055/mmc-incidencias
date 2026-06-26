@@ -8,6 +8,8 @@ import {
   Tag,
   CalendarDays,
   Trash2,
+  Pencil,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -15,7 +17,7 @@ import { isStaff } from "@/lib/domain";
 import { Card, CardContent } from "@/components/ui/card";
 import { MediaGrid } from "@/components/media/media-grid";
 import { formatDateTime } from "@/lib/utils";
-import { deleteTutorialAction } from "../actions";
+import { deleteTutorialAction, transcribeTutorialAction } from "../actions";
 
 export const metadata: Metadata = { title: "Tutorial" };
 
@@ -62,6 +64,7 @@ export default async function TutorialDetailPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = tutorial as any;
   const staff = isStaff(profile.role);
+  const hasVideo = (media ?? []).some((m) => m.kind === "video");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -96,15 +99,35 @@ export default async function TutorialDetailPage({
           </div>
         </div>
         {staff && (
-          <form action={deleteTutorialAction}>
-            <input type="hidden" name="id" value={t.id} />
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          <div className="flex flex-wrap items-center gap-2">
+            {hasVideo && (
+              <form action={transcribeTutorialAction}>
+                <input type="hidden" name="id" value={t.id} />
+                <button
+                  type="submit"
+                  title="Transcreve o áudio dos vídeos (≤25 MB) para a IA entender o conteúdo"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-navy-700 transition-colors hover:bg-surface-muted"
+                >
+                  <Sparkles className="h-4 w-4 text-orange-600" /> Analisar vídeo (IA)
+                </button>
+              </form>
+            )}
+            <Link
+              href={`/tutoriais/${t.id}/editar`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-navy-700 px-3 py-2 text-sm font-medium text-navy-700 transition-colors hover:bg-navy-700/5"
             >
-              <Trash2 className="h-4 w-4" /> Excluir
-            </button>
-          </form>
+              <Pencil className="h-4 w-4" /> Editar
+            </Link>
+            <form action={deleteTutorialAction}>
+              <input type="hidden" name="id" value={t.id} />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4" /> Excluir
+              </button>
+            </form>
+          </div>
         )}
       </div>
 
@@ -128,9 +151,14 @@ export default async function TutorialDetailPage({
         </Card>
       )}
 
-      <p className="text-xs text-faint">
-        Criado por {t.creator?.full_name || t.creator?.email}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-faint">
+        <span>Criado por {t.creator?.full_name || t.creator?.email}</span>
+        {t.transcript && (
+          <span className="inline-flex items-center gap-1 text-orange-600">
+            <Sparkles className="h-3.5 w-3.5" /> IA já analisou o áudio do vídeo
+          </span>
+        )}
+      </div>
     </div>
   );
 }

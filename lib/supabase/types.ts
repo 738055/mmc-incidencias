@@ -115,9 +115,21 @@ export type Tutorial = {
   system_id: string | null;
   category: string | null;
   published: boolean;
+  transcript: string | null;
+  /** Embedding (pgvector) serializado como texto "[...]"; preenchido pela IA. */
+  embedding: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
+}
+
+/** Resultado da RPC `match_tutorials` (busca semântica de tutoriais). */
+export type MatchedTutorial = {
+  id: string;
+  title: string;
+  content: string | null;
+  category: string | null;
+  similarity: number;
 }
 
 export type TutorialMedia = {
@@ -289,6 +301,14 @@ export interface Database {
           p_exclude_id?: string | null;
         };
         Returns: MatchedIncident[];
+      };
+      match_tutorials: {
+        Args: {
+          query_embedding: string;
+          match_count?: number;
+          similarity_threshold?: number;
+        };
+        Returns: MatchedTutorial[];
       };
     };
     Enums: {

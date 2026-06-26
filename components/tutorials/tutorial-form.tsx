@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import {
   createTutorialAction,
+  editTutorialAction,
   type TutorialFormState,
 } from "@/app/(app)/tutoriais/actions";
 import { Button } from "@/components/ui/button";
@@ -15,12 +16,20 @@ import { CATEGORIES } from "@/lib/domain";
 
 type Option = { id: string; name: string };
 
-function SubmitButton() {
+type TutorialDefaults = {
+  id: string;
+  title: string;
+  content: string | null;
+  system_id: string | null;
+  category: string | null;
+};
+
+function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="accent" size="lg" disabled={pending}>
       {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-      Publicar tutorial
+      {label}
     </Button>
   );
 }
@@ -28,17 +37,21 @@ function SubmitButton() {
 export function TutorialForm({
   userId,
   systems,
+  tutorial,
 }: {
   userId: string;
   systems: Option[];
+  tutorial?: TutorialDefaults;
 }) {
+  const isEdit = !!tutorial;
   const [state, formAction] = useActionState<TutorialFormState, FormData>(
-    createTutorialAction,
+    isEdit ? editTutorialAction : createTutorialAction,
     {},
   );
 
   return (
     <form action={formAction}>
+      {isEdit && <input type="hidden" name="id" value={tutorial.id} />}
       <Card>
         <CardContent className="space-y-5 pt-5">
           <div>
@@ -48,6 +61,7 @@ export function TutorialForm({
               name="title"
               required
               maxLength={200}
+              defaultValue={tutorial?.title ?? ""}
               placeholder="Ex.: Como reconfigurar a VPN da filial"
             />
           </div>
@@ -55,7 +69,11 @@ export function TutorialForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="systemId">Sistema</Label>
-              <Select id="systemId" name="systemId" defaultValue="">
+              <Select
+                id="systemId"
+                name="systemId"
+                defaultValue={tutorial?.system_id ?? ""}
+              >
                 <option value="">Selecione...</option>
                 {systems.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -66,7 +84,11 @@ export function TutorialForm({
             </div>
             <div>
               <Label htmlFor="category">Categoria</Label>
-              <Select id="category" name="category" defaultValue="">
+              <Select
+                id="category"
+                name="category"
+                defaultValue={tutorial?.category ?? ""}
+              >
                 <option value="">Selecione...</option>
                 {CATEGORIES.map((c) => (
                   <option key={c} value={c}>
@@ -84,6 +106,7 @@ export function TutorialForm({
               name="content"
               rows={8}
               maxLength={20000}
+              defaultValue={tutorial?.content ?? ""}
               placeholder={
                 "Descreva o passo a passo da solução. Ex.:\n1. Abrir o Cisco AnyConnect…\n2. …"
               }
@@ -91,7 +114,7 @@ export function TutorialForm({
           </div>
 
           <div>
-            <Label>Vídeo e imagens</Label>
+            <Label>{isEdit ? "Adicionar mais vídeo/imagens" : "Vídeo e imagens"}</Label>
             <MediaUploader userId={userId} name="media" />
           </div>
 
@@ -102,7 +125,7 @@ export function TutorialForm({
           )}
 
           <div className="flex justify-end">
-            <SubmitButton />
+            <SubmitButton label={isEdit ? "Salvar alterações" : "Publicar tutorial"} />
           </div>
         </CardContent>
       </Card>
