@@ -26,7 +26,9 @@ export function MascotAvatar({
   size?: number;
   className?: string;
 }) {
-  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  // Status de carregamento por clipe: undefined (carregando) | "ok" | "error".
+  const [status, setStatus] = useState<Record<string, "ok" | "error">>({});
+  const activeOk = status[state] === "ok";
 
   return (
     <div
@@ -37,10 +39,6 @@ export function MascotAvatar({
       style={{ width: size, height: size }}
       aria-label="Bugzito — assistente MMC"
     >
-      {/* Base: fallback sempre por baixo. Um clipe ativo o cobre por completo;
-          se o vídeo faltar/falhar, o fallback aparece automaticamente. */}
-      <MascotFallback state={state} />
-
       {STATES.map((s) => (
         <video
           key={s}
@@ -49,14 +47,19 @@ export function MascotAvatar({
           muted
           playsInline
           preload="auto"
-          onError={() => setFailed((f) => ({ ...f, [s]: true }))}
+          onLoadedData={() => setStatus((p) => ({ ...p, [s]: "ok" }))}
+          onError={() => setStatus((p) => ({ ...p, [s]: "error" }))}
           className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-          style={{ opacity: s === state && failed[s] !== true ? 1 : 0 }}
+          style={{ opacity: s === state && status[s] === "ok" ? 1 : 0 }}
         >
           <source src={`/mascot/${s}.webm`} type="video/webm" />
           <source src={`/mascot/${s}.mp4`} type="video/mp4" />
         </video>
       ))}
+
+      {/* Fallback só quando o clipe ativo ainda não carregou ou falhou — assim
+          não vaza por trás de vídeos com fundo transparente. */}
+      {!activeOk && <MascotFallback state={state} />}
     </div>
   );
 }

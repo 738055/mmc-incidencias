@@ -7,6 +7,7 @@ import {
   Rocket,
   Sparkles,
   ArrowRight,
+  BarChart3,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -59,6 +60,36 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(6);
 
+  // Volume dos últimos 7 dias (só faz sentido p/ equipe, que enxerga tudo).
+  const staff = isStaff(profile.role);
+  let week: { label: string; count: number }[] = [];
+  if (staff) {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - 6);
+    const { data: rows } = await supabase
+      .from("incidents")
+      .select("created_at")
+      .gte("created_at", start.toISOString());
+
+    week = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      const next = new Date(day);
+      next.setDate(day.getDate() + 1);
+      const count = (rows ?? []).filter((r) => {
+        const t = new Date(r.created_at as string);
+        return t >= day && t < next;
+      }).length;
+      const label = day
+        .toLocaleDateString("pt-BR", { weekday: "short" })
+        .replace(".", "");
+      return { label, count };
+    });
+  }
+  const weekMax = Math.max(1, ...week.map((d) => d.count));
+  const weekTotal = week.reduce((s, d) => s + d.count, 0);
+
   const metrics = [
     { label: "Abertos", value: open, icon: Ticket, accent: "bg-status-open", chip: "bg-status-open/10 text-status-open", href: "/incidencias?status=open" },
     { label: "Em andamento", value: inProgress, icon: Loader, accent: "bg-orange-500", chip: "bg-orange-500/10 text-orange-600", href: "/incidencias?status=in_progress" },
@@ -110,6 +141,42 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Volume da semana (equipe) */}
+      {staff && (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-semibold text-navy-700">
+              <BarChart3 className="h-5 w-5 text-orange-600" /> Volume da semana
+            </h2>
+            <span className="text-xs text-muted">
+              {weekTotal} chamado{weekTotal === 1 ? "" : "s"} nos últimos 7 dias
+            </span>
+          </div>
+          <div className="mt-6 grid grid-cols-7 gap-2 sm:gap-3">
+            {week.map((d, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5">
+                <div className="flex h-32 w-full items-end">
+                  <div
+                    className="w-full rounded-t-md bg-gradient-to-t from-navy-700 to-navy-400 transition-all"
+                    style={{
+                      height: `${Math.round((d.count / weekMax) * 100)}%`,
+                      minHeight: d.count > 0 ? "10px" : "3px",
+                    }}
+                    title={`${d.count} chamado(s)`}
+                  />
+                </div>
+                <span className="text-sm font-semibold text-navy-700">
+                  {d.count}
+                </span>
+                <span className="font-label text-[10px] uppercase tracking-wider text-faint">
+                  {d.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recentes */}

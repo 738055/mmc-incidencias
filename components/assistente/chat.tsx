@@ -97,7 +97,7 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-[var(--shadow-card)]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-surface">
       {/* Cabeçalho com o mascote */}
       <div className="flex items-center gap-3 border-b border-border bg-surface-muted px-5 py-3">
         <MascotAvatar state={mascot} size={56} />

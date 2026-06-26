@@ -17,7 +17,9 @@ export default async function AssistantPage() {
           tutoriais e nas soluções já registradas.
         </p>
       </div>
-      <AssistantChat firstName={firstName} />
+      <div className="h-[calc(100vh-12rem)] overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)]">
+        <AssistantChat firstName={firstName} />
+      </div>
     </div>
   );
 }

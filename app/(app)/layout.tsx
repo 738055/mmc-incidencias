@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { AssistantWidget } from "@/components/assistente/assistant-widget";
 import { requireProfile } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -8,6 +9,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireProfile();
+  const firstName = profile.full_name?.split(" ")[0] || undefined;
 
   return (
     <div className="flex min-h-screen">
@@ -18,6 +20,7 @@ export default async function AppLayout({
           <div className="mx-auto max-w-6xl">{children}</div>
         </main>
       </div>
+      <AssistantWidget firstName={firstName} />
     </div>
   );
 }
