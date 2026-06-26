@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Incident Assistant - MMC Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#191c21",
+                        "surface": "#f8f9ff",
+                        "surface-container-low": "#f2f3fa",
+                        "border-quiet": "#E9ECEF",
+                        "primary-container": "#002b5b",
+                        "surface-variant": "#e1e2e9",
+                        "inverse-surface": "#2e3136",
+                        "on-primary-container": "#7594ca",
+                        "on-primary-fixed": "#001b3d",
+                        "primary-fixed": "#d6e3ff",
+                        "tertiary-fixed-dim": "#70df45",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e1e2e9",
+                        "on-tertiary-fixed-variant": "#175200",
+                        "on-tertiary-container": "#3aa804",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-secondary": "#ffffff",
+                        "status-warning": "#FBBC04",
+                        "on-primary-fixed-variant": "#264778",
+                        "on-secondary-fixed": "#321200",
+                        "on-tertiary-fixed": "#052100",
+                        "surface-container": "#eceef4",
+                        "on-surface-variant": "#43474f",
+                        "secondary-fixed-dim": "#ffb68b",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#8bfd5f",
+                        "tertiary-container": "#0b3300",
+                        "secondary": "#994700",
+                        "on-secondary-fixed-variant": "#753400",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#592600",
+                        "status-critical": "#D93025",
+                        "surface-bright": "#f8f9ff",
+                        "surface-dim": "#d8dae0",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#001736",
+                        "surface-card": "#FFFFFF",
+                        "surface-container-high": "#e6e8ef",
+                        "secondary-container": "#fb7800",
+                        "outline-variant": "#c4c6d0",
+                        "inverse-primary": "#a9c7ff",
+                        "error-container": "#ffdad6",
+                        "outline": "#747780",
+                        "background": "#f8f9ff",
+                        "inverse-on-surface": "#eff0f7",
+                        "background-subtle": "#F8F9FA",
+                        "on-error": "#ffffff",
+                        "tertiary": "#041c00",
+                        "on-surface": "#191c21",
+                        "surface-tint": "#405f91",
+                        "secondary-fixed": "#ffdbc8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "base": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "card-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #c4c6d0;
+            border-radius: 20px;
+        }
+        .shadow-soft {
+            box-shadow: 0 4px 20px rgba(0, 23, 54, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- Side Navigation -->
+<nav class="fixed left-0 top-0 h-full w-[280px] bg-primary shadow-md z-50 flex flex-col p-4 gap-2 text-on-primary">
+<div class="flex items-center gap-4 px-4 py-6 mb-4">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-on-primary font-headline-md font-bold">M</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold">MMC Portal</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container">IT Management</p>
+</div>
+</div>
+<button class="w-full bg-secondary text-on-secondary font-label-md text-label-md py-3 rounded-lg mb-6 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+            New Incident
+        </button>
+<div class="flex flex-col gap-2 flex-grow">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary text-on-secondary rounded-lg active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                Incidents
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+                Improvements
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+                Knowledge Base
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">dns</span>
+                Systems
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">handshake</span>
+                Partners
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Admin
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-[280px] flex flex-col min-h-screen">
+<!-- Top Navigation -->
+<header class="sticky top-0 w-full z-40 bg-surface border-b border-border-quiet h-16 px-margin-desktop flex justify-between items-center">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-extrabold text-primary">MMC Support</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm bg-surface-container-low px-3 py-1 rounded-full border border-border-quiet">New Incident Flow</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/50 rounded-full p-2 transition-all duration-300 ease-in-out">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/50 rounded-full p-2 transition-all duration-300 ease-in-out">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm ml-2 cursor-pointer">
+                    JS
+                </div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-1 p-margin-desktop bg-background grid grid-cols-12 gap-gutter">
+<!-- AI Chat Interface (Left Column) -->
+<section class="col-span-12 lg:col-span-7 xl:col-span-8 flex flex-col bg-surface-card rounded-xl shadow-soft border border-border-quiet overflow-hidden h-[calc(100vh-140px)]">
+<!-- Chat Header -->
+<div class="px-card-padding py-4 border-b border-border-quiet bg-surface flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Support Assistant</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Describe your issue in detail</p>
+</div>
+</div>
+</div>
+<!-- Chat History -->
+<div class="flex-1 overflow-y-auto p-card-padding flex flex-col gap-6 custom-scrollbar bg-surface-container-lowest">
+<!-- AI Greeting -->
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-on-primary mt-1">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+</div>
+<div class="bg-surface-container-low text-on-background px-4 py-3 rounded-2xl rounded-tl-none max-w-[80%]">
+<p class="font-body-md text-body-md">Hello. I'm the MMC IT Support Assistant. Please describe the problem you're experiencing. You can type or upload screenshots to help me understand.</p>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex gap-4 flex-row-reverse">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex-shrink-0 flex items-center justify-center font-label-sm mt-1">
+                            JS
+                        </div>
+<div class="bg-primary text-on-primary px-4 py-3 rounded-2xl rounded-tr-none max-w-[80%] shadow-sm">
+<p class="font-body-md text-body-md">Users in the London office are reporting they can't access the internal Confluence wiki. They are getting a 502 Bad Gateway error. This started about 10 minutes ago.</p>
+</div>
+</div>
+<!-- AI Processing Indicator -->
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-on-primary mt-1">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+</div>
+<div class="bg-surface-container-low text-on-surface-variant px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-2">
+<div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+</div></div></div></section></main></div></body></html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MMC Portal - Incident Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#191c21",
+                        "surface": "#f8f9ff",
+                        "surface-container-low": "#f2f3fa",
+                        "border-quiet": "#E9ECEF",
+                        "primary-container": "#002b5b",
+                        "surface-variant": "#e1e2e9",
+                        "inverse-surface": "#2e3136",
+                        "on-primary-container": "#7594ca",
+                        "on-primary-fixed": "#001b3d",
+                        "primary-fixed": "#d6e3ff",
+                        "tertiary-fixed-dim": "#70df45",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e1e2e9",
+                        "on-tertiary-fixed-variant": "#175200",
+                        "on-tertiary-container": "#3aa804",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-secondary": "#ffffff",
+                        "status-warning": "#FBBC04",
+                        "on-primary-fixed-variant": "#264778",
+                        "on-secondary-fixed": "#321200",
+                        "on-tertiary-fixed": "#052100",
+                        "surface-container": "#eceef4",
+                        "on-surface-variant": "#43474f",
+                        "secondary-fixed-dim": "#ffb68b",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#8bfd5f",
+                        "tertiary-container": "#0b3300",
+                        "secondary": "#994700",
+                        "on-secondary-fixed-variant": "#753400",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#592600",
+                        "status-critical": "#D93025",
+                        "surface-bright": "#f8f9ff",
+                        "surface-dim": "#d8dae0",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#001736",
+                        "surface-card": "#FFFFFF",
+                        "surface-container-high": "#e6e8ef",
+                        "secondary-container": "#fb7800",
+                        "outline-variant": "#c4c6d0",
+                        "inverse-primary": "#a9c7ff",
+                        "error-container": "#ffdad6",
+                        "outline": "#747780",
+                        "background": "#f8f9ff",
+                        "inverse-on-surface": "#eff0f7",
+                        "background-subtle": "#F8F9FA",
+                        "on-error": "#ffffff",
+                        "tertiary": "#041c00",
+                        "on-surface": "#191c21",
+                        "surface-tint": "#405f91",
+                        "secondary-fixed": "#ffdbc8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "base": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "card-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 23, 54, 0.04), 0 2px 4px -1px rgba(0, 23, 54, 0.02); }
+        .interactive-shadow:hover { box-shadow: 0 10px 15px -3px rgba(0, 23, 54, 0.08), 0 4px 6px -2px rgba(0, 23, 54, 0.04); border-color: #001736; }
+        .pulse-ring { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen flex overflow-hidden">
+<!-- TopNavBar -->
+<header class="sticky top-0 w-full z-40 bg-surface border-b border-border-quiet flex justify-between items-center h-16 px-margin-desktop ml-[280px] absolute">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-extrabold text-primary">MMC Support</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 border border-border-quiet rounded-full bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-sm text-body-sm text-on-surface w-64 transition-all" placeholder="Search..." type="text"/>
+</div>
+<button class="hover:bg-surface-container-highest/50 rounded-full p-2 text-on-surface-variant hover:text-primary transition-all duration-300 ease-in-out">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="hover:bg-surface-container-highest/50 rounded-full p-2 text-on-surface-variant hover:text-primary transition-all duration-300 ease-in-out">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help_outline</span>
+</button>
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-border-quiet object-cover" data-alt="A professional headshot of a user in a well-lit office setting. The image should be cropped into a perfect circle, showcasing a clean, modern corporate aesthetic. The lighting should be soft and flattering, highlighting the subject's face against a neutral background. The overall tone is approachable yet authoritative, fitting for an IT management portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuABMt-tsCiffNJMCnuTbSkEZO1VAgrKj5nV04vJJUtpl1cIpGipmaf1E6IRU-1I9DdejjqsTt1wblk0lu2GteI9kHRr6F6rqaEGA-pNQB2R_sszdpVloP8bdpUkwQ88hAvd0r05sGgQ8nS2RuQrXWPi1HrIH68U5USP8rtFL7Ss-CFbG-04iLMP6gjzTBXqMYUzeBP3XFg7abVMEJh1fC96f0Y2bjWIZQMAfidpf2fL7e0LLF_5_6xbX54bWBmf3IQOR_sImmAovA"/>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[280px] bg-primary text-on-primary shadow-md flex flex-col p-4 gap-2 z-50">
+<div class="flex items-center gap-3 mb-8 px-4 mt-2">
+<div class="w-10 h-10 bg-surface-container-lowest rounded flex items-center justify-center text-primary font-bold font-headline-md">M</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary">MMC Portal</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container">IT Management</p>
+</div>
+</div>
+<button class="bg-secondary text-on-secondary font-body-md text-body-md py-3 rounded-lg flex items-center justify-center gap-2 mb-6 hover:bg-secondary-container transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+            New Incident
+        </button>
+<div class="flex flex-col gap-1 flex-grow font-body-md text-body-md">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary text-on-secondary rounded-lg active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                Incidents
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">trending_up</span>
+                Improvements
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu_book</span>
+                Knowledge Base
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dns</span>
+                Systems
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">handshake</span>
+                Partners
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors duration-200 rounded-lg mt-auto" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+                Admin
+            </a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="ml-[280px] mt-16 p-margin-desktop flex-grow overflow-y-auto bg-background w-full">
+<div class="max-w-container-max mx-auto">
+<!-- Header -->
+<div class="mb-gutter flex justify-between items-start">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">#INC-0924</span>
+<span class="font-label-md text-label-md text-status-critical bg-error-container px-2 py-1 rounded flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-status-critical pulse-ring"></div>
+                            Critical
+                        </span>
+<span class="font-label-md text-label-md text-primary bg-primary-fixed px-2 py-1 rounded">Open</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Database Connection Timeout on Production Core</h2>
+</div>
+<button class="bg-surface-container-lowest border border-border-quiet hover:border-primary text-primary font-body-sm text-body-sm px-4 py-2 rounded flex items-center gap-2 transition-colors interactive-shadow">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">share</span>
+                    Share
+                </button>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left Column (8 cols) -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-gutter">
+<!-- Problem Description Card -->
+<div class="bg-surface-card rounded-lg card-shadow p-card-padding border border-transparent hover:border-primary transition-all duration-300">
+<div class="flex items-center gap-2 mb-4 pb-4 border-b border-border-quiet">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
+<h3 class="font-headline-md text-headline-md text-primary">Problem Description</h3>
+</div>
+<div class="font-body-md text-body-md text-on-surface mb-6 space-y-4">
+<p>Starting at 08:14 AM UTC, monitoring alerts indicated a spike in database connection timeouts for the primary core production cluster (DB-PROD-CORE-01). The connection pool seems to be exhausted, causing cascading failures in dependent microservices, specifically the user authentication service and order processing.</p>
+<p>Initial investigation shows no unusual spike in user traffic. Looking at the slow query logs, there appears to be a long-running transaction blocking subsequent requests. Need immediate assistance from DBAs to identify the blocking query and potentially kill the session to restore service.</p>
+</div>
+<div class="mt-6">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wider">Attachments</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="border border-border-quiet rounded overflow-hidden group cursor-pointer">
+<div class="bg-cover bg-center w-full h-32 group-hover:opacity-90 transition-opacity" data-alt="A screenshot of a server monitoring dashboard showing a sudden, sharp spike in latency graphs, rendered in a dark mode technical aesthetic with neon red lines indicating critical thresholds being breached." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDlk61KHMEuUZAUt6p8qP5bkBax_vO5PEZqOe1nIEYKhIX6LfP8JGmhmwPKcazXDseI_w1fiQoZPhzjl9gYGkA7XvlWz4ft-s0LNSO4j2TH9-_rpmmtS549ymrPZxvROcSb-zMgxnlm7dBR23vwl3pU80k_o1DUhWv3gOveO9T8niVnd66GnXp_HfdJPrJ-iOqEfc4T-zLKnF6R9E8FzLRk34hovKXGrsJLXDi-D6uEdvJrqLRQZYZdBFwjbDPJJOkAB7-uAwgMWg')"></div>
+<div class="p-2 bg-surface-container-lowest font-body-sm text-body-sm text-on-surface-variant flex justify-between items-center">
+<span class="truncate">grafana-spike-0814.png</span>
+<span class="material-symbols-outlined text-sm">download</span>
+</div>
+</div>
+<div class="border border-border-quiet rounded overflow-hidden group cursor-pointer flex flex-col justify-center items-center bg-surface-container-low h-full min-h-[160px]">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2" style="font-variation-settings: 'FILL' 0;">article</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">slow_queries.log</span>
+<span class="font-label-sm text-label-sm text-outline mt-1">24 KB</span>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Analysis Card -->
+<div class="bg-surface-card rounded-lg card-shadow p-card-padding border border-secondary/20 relative overflow-hidden">
+<!-- Subtle gradient background for AI card -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary-fixed-dim/10 to-transparent pointer-events-none"></div>
+<div class="flex items-center gap-2 mb-4 pb-4 border-b border-border-quiet relative z-10">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+                                AI Analysis
+                                <span class="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-2 py-0.5 rounded">Claude 3.5 Sonnet</span>
+</h3>
+</div>
+<div class="relative z-10">
+<div class="mb-4">
+<h4 class="font-body-md text-body-md font-semibold text-on-surface mb-2">Diagnosis Summary</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Based on the provided logs and description, the issue is highly likely a <strong>transaction deadlock</strong> in `DB-PROD-CORE-01`. The logs indicate a bulk update operation initiated by the nightly batch job (Job ID: `BAT-992`) failed to complete and left an uncommitted transaction holding exclusive locks on the `orders` table. This is causing the connection pool exhaustion as subsequent web requests pile up waiting for the lock.</p>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg border border-border-quiet mt-4">
+<h4 class="font-body-md text-body-md font-semibold text-primary flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+                                    Suggested Solution
+                                </h4>
+<ol class="list-decimal list-inside font-body-sm text-body-sm text-on-surface-variant space-y-2 ml-1">
+<li>Connect to `DB-PROD-CORE-01` primary node.</li>
+<li>Run the diagnostic query to identify the specific Process ID (PID) holding the lock on the `orders` table.</li>
+<li>Execute `pg_terminate_backend(PID)` to forcefully kill the blocking session.</li>
+<li>Review the configuration for the nightly batch job `BAT-992` to implement smaller batch sizes or statement timeouts.</li>
+</ol>
+<div class="mt-4 pt-4 border-t border-border-quiet flex gap-2">
+<button class="bg-surface-container-lowest border border-border-quiet text-on-surface font-body-sm text-body-sm px-3 py-1.5 rounded hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">thumb_up</span> Helpful
+                                    </button>
+<button class="bg-surface-container-lowest border border-border-quiet text-on-surface font-body-sm text-body-sm px-3 py-1.5 rounded hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">content_copy</span> Copy Steps
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (4 cols) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+<!-- Actions Card -->
+<div class="bg-surface-card rounded-lg card-shadow p-card-padding">
+<div class="flex items-center gap-2 mb-4 pb-4 border-b border-border-quiet">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h3 class="font-headline-md text-headline-md text-primary">Actions</h3>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full bg-secondary text-on-secondary font-body-md text-body-md py-2 px-4 rounded hover:bg-secondary-container transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">assignment_ind</span>
+                                Assign to Me
+                            </button>
+<button class="w-full bg-surface-container-lowest border border-primary text-primary font-body-md text-body-md py-2 px-4 rounded hover:bg-primary-fixed/50 transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-sm">published_with_changes</span>
+                                Change Status
+                            </button>
+<button class="w-full bg-surface-container-lowest border border-border-quiet text-on-surface font-body-md text-body-md py-2 px-4 rounded hover:bg-surface-container-highest transition-colors flex justify-center items-center gap-2 mt-4">
+<span class="material-symbols-outlined text-sm">task_alt</span>
+                                Register Solution
+                            </button>
+</div>
+</div>
+<!-- Details Card -->
+<div class="bg-surface-card rounded-lg card-shadow p-card-padding">
+<div class="flex items-center gap-2 mb-4 pb-4 border-b border-border-quiet">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">info</span>
+<h3 class="font-headline-md text-headline-md text-primary">Details</h3>
+</div>
+<div class="space-y-4">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Open Date</p>
+<p class="font-body-md text-body-md text-on-surface">Oct 24, 2023 - 08:17 AM UTC</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Requester</p>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm text-label-sm">JS</div>
+<p class="font-body-md text-body-md text-on-surface">Jane Smith (DevOps)</p>
+</div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Affected System</p>
+<p class="font-body-md text-body-md text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-primary">dns</span>
+                                    DB-PROD-CORE-01
+                                </p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Assigned Tech</p>
+<p class="font-body-md text-body-md text-on-surface-variant italic">Unassigned</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Partner Company</p>
+<p class="font-body-md text-body-md text-on-surface">AWS Hosting</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

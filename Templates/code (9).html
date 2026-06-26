@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalhe do Chamado - MMC Incidências</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#592600",
+                        "inverse-primary": "#a9c7ff",
+                        "outline": "#747780",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#d6e3ff",
+                        "inverse-on-surface": "#eff0f7",
+                        "tertiary-container": "#0b3300",
+                        "on-surface": "#191c21",
+                        "background": "#f8f9ff",
+                        "on-primary-fixed-variant": "#264778",
+                        "on-primary-container": "#7594ca",
+                        "on-background": "#191c21",
+                        "secondary": "#994700",
+                        "outline-variant": "#c4c6d0",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#8bfd5f",
+                        "on-secondary": "#ffffff",
+                        "background-subtle": "#F8F9FA",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f2f3fa",
+                        "secondary-container": "#fb7800",
+                        "tertiary": "#041c00",
+                        "on-tertiary-fixed-variant": "#175200",
+                        "surface-bright": "#f8f9ff",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-tertiary-fixed": "#052100",
+                        "tertiary-fixed-dim": "#70df45",
+                        "on-secondary-fixed": "#321200",
+                        "on-secondary-fixed-variant": "#753400",
+                        "on-surface-variant": "#43474f",
+                        "surface-card": "#FFFFFF",
+                        "secondary-fixed": "#ffdbc8",
+                        "inverse-surface": "#2e3136",
+                        "surface-variant": "#e1e2e9",
+                        "surface-tint": "#405f91",
+                        "surface-container-highest": "#e1e2e9",
+                        "border-quiet": "#E9ECEF",
+                        "primary-container": "#002b5b",
+                        "primary": "#001736",
+                        "on-primary-fixed": "#001b3d",
+                        "on-error-container": "#93000a",
+                        "status-critical": "#D93025",
+                        "status-warning": "#FBBC04",
+                        "surface-container": "#eceef4",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e6e8ef",
+                        "surface-dim": "#d8dae0",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb68b",
+                        "surface": "#f8f9ff",
+                        "on-tertiary-container": "#3aa804"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-padding": "24px",
+                        "base": "8px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #f8f9ff; color: #191c21; }
+        .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal; direction: ltr; -webkit-font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; }
+    </style>
+</head>
+<body class="bg-background flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col bg-primary h-full w-[280px] shadow-sm py-base px-4 gap-2 fixed left-0 top-0 z-50">
+<div class="mb-8 pt-4 px-2">
+<div class="font-headline-md text-headline-md text-on-primary">IT Incident Manager</div>
+<div class="text-primary-fixed-dim text-sm mt-1">MMC Operations</div>
+</div>
+<button class="bg-secondary-container text-on-secondary-container rounded-lg font-bold py-3 px-4 mb-6 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+            New Ticket
+        </button>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim hover:text-on-primary hover:bg-primary-fixed-variant rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold font-label-md text-label-md transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+                Incidents
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim hover:text-on-primary hover:bg-primary-fixed-variant rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_add">assignment_add</span>
+                Requests
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim hover:text-on-primary hover:bg-primary-fixed-variant rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+                Stakeholders
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim hover:text-on-primary hover:bg-primary-fixed-variant rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+                Partners
+            </a>
+</div>
+<div class="mt-auto border-t border-primary-fixed-variant pt-4 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim hover:text-on-primary hover:bg-primary-fixed-variant rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+                AI Assistant
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim hover:text-on-primary hover:bg-primary-fixed-variant rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-[280px] h-full overflow-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface docked full-width top-0 border-b border-outline-variant flat no shadows flex justify-between items-center w-full px-margin-desktop h-16 z-40 shrink-0">
+<div class="flex items-center gap-4">
+<div class="md:hidden text-headline-md font-headline-md font-bold text-primary">MMC IT Support</div>
+<div class="hidden md:flex items-center bg-surface-container-low rounded-lg px-3 py-1.5 border border-border-quiet focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm text-on-surface ml-2 w-48" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm ml-2 overflow-hidden">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional headshot of a corporate IT technician in a well-lit modern office environment. High quality, clear, bright lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMtJIdW6DObDb_EwU3xYoIKI3iKHn5j5H5aS5t3h3EbMkboPkpuC70DanhREjgF6TNN74RaBjNCgSzdbgVUQXKLtDZVEfpFuFbwNws-rWwqVtLF_JntmJE0AQu4QBeuer1oKx-2_5mnUYrTHO9gQZidVvx5Hl7P00hXVPuxU98Ca4c77dRphiMzJKjB4DNzOFSAqMInI9oD5FWgSlQ43GD243Y7tmwGycqQmrquP-O4tpkUgJ_c557ox7Sxvkbgc0zc6352mNigw"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop bg-background-subtle">
+<div class="max-w-container-max mx-auto">
+<!-- Page Header -->
+<div class="mb-8">
+<div class="flex items-center gap-3 mb-2">
+<span class="text-primary font-label-md text-label-md font-bold">#INC-0924</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-label-sm">Incidência</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-on-surface">Falha de conexão VPN - Filial Sul</h1>
+<div class="flex gap-2">
+<span class="px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm flex items-center gap-1 border border-red-200">
+<span class="w-2 h-2 rounded-full bg-status-critical"></span>
+                                Alta
+                            </span>
+<span class="px-3 py-1 rounded-full bg-[#fff8e1] text-[#795548] font-label-sm text-label-sm flex items-center gap-1 border border-[#ffe082]">
+<span class="w-2 h-2 rounded-full bg-status-warning"></span>
+                                Em Aberto
+                            </span>
+</div>
+</div>
+</div>
+<!-- Two Column Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column (Primary Content) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Description Card -->
+<div class="bg-surface-card rounded-lg p-card-padding shadow-sm border border-border-quiet">
+<h2 class="text-headline-md font-headline-md text-primary mb-4 flex items-center gap-2 border-b border-border-quiet pb-2">
+<span class="material-symbols-outlined text-primary">description</span>
+                                Descrição do Problema
+                            </h2>
+<p class="text-body-md font-body-md text-on-surface-variant whitespace-pre-line">
+                                Usuários da filial sul (Porto Alegre) estão reportando incapacidade de conectar à VPN corporativa desde as 08:00 de hoje. O cliente Cisco AnyConnect retorna o erro "Connection attempt has timed out. Please verify Internet connectivity."
+                                
+                                Já verificamos que o link de internet local está operacional e outros serviços em nuvem estão acessíveis. O problema parece estar restrito ao túnel VPN.
+                            </p>
+<!-- Attachments -->
+<div class="mt-6 pt-4 border-t border-border-quiet">
+<h3 class="text-body-sm font-bold text-on-surface mb-3 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">attachment</span>
+                                    Anexos (2)
+                                </h3>
+<div class="flex gap-4">
+<div class="w-24 h-24 rounded border border-border-quiet overflow-hidden relative group cursor-pointer">
+<img alt="Error Screenshot 1" class="w-full h-full object-cover" data-alt="A screenshot of a computer monitor showing a Cisco AnyConnect VPN error dialog box on a Windows desktop. High contrast, clear text." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj22i_kvEgHlYGxfyWObfyDHiNnz5LXQAr9slrS0bGD9WM6LhYh00iSsJMJ5EslOPCSDAOFdz44N8JytGq5y3tEtxsasjqpvK7MRWbDRzZgaC6S6uV7wLp0u_2V6vQqpK9mVT8xoW7VfWFD3a76SleA82FoSlKG58UaWesI4p6m52bSIfJeGRBIxuu2qqBgKWm7P10iHDsksNajXmR1z1aaRUICVdr0JszDISiIepPOIqZ4etUvu5vpTKX4Nxp2FK2816nn8Al2A"/>
+<div class="absolute inset-0 bg-primary/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white">zoom_in</span>
+</div>
+</div>
+<div class="w-24 h-24 rounded border border-border-quiet overflow-hidden relative group cursor-pointer flex items-center justify-center bg-surface-container-low">
+<span class="material-symbols-outlined text-outline text-3xl">description</span>
+<span class="absolute bottom-1 right-1 text-xs font-label-sm bg-surface-card px-1 rounded shadow">.log</span>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Analysis Card -->
+<div class="bg-surface-card rounded-lg p-card-padding shadow-sm border border-border-quiet relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary-container/10 rounded-bl-full -z-10"></div>
+<h2 class="text-headline-md font-headline-md text-primary mb-4 flex items-center gap-2 border-b border-border-quiet pb-2">
+<span class="material-symbols-outlined text-secondary">psychology</span>
+                                Análise da IA (Claude)
+                            </h2>
+<div class="bg-surface-container-low p-4 rounded-lg border border-primary-fixed-dim/30">
+<p class="text-body-md font-body-md text-on-surface mb-3 font-semibold">Resumo do diagnóstico preliminar:</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-4">
+                                    Com base na descrição e no log anexado, o erro "Connection attempt has timed out" combinado com o código específico no log sugere uma falha de negociação de certificado de segurança após a última atualização do Windows (KB5031356).
+                                </p>
+<div class="bg-white p-3 rounded border border-border-quiet flex items-start gap-3">
+<span class="material-symbols-outlined text-status-warning mt-0.5">lightbulb</span>
+<div>
+<p class="text-body-sm font-bold text-on-surface">Solução Sugerida:</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">
+                                            Reinstale o certificado raiz da VPN no repositório local das máquinas afetadas ou reverta temporariamente o patch KB5031356 enquanto a correção definitiva não é homologada. Consulte o KBA-492 para o script de automação.
+                                        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline / Comments -->
+<div class="bg-surface-card rounded-lg p-card-padding shadow-sm border border-border-quiet">
+<h2 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2 border-b border-border-quiet pb-2">
+<span class="material-symbols-outlined text-primary">forum</span>
+                                Atividades
+                            </h2>
+<!-- Comment Input -->
+<div class="flex gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar showing a professional corporate IT manager looking at the camera. Professional setting, high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7E1Ix95Evns_FURFdiAY3h-eRsyVtfTcxsu2VMvpj6aiBZJdVKlRQL_gImSuRRB7f3JSRok2SdsxONyqDTdp3seLtT5fzZ4QwHVrYpzhlaO7P6khIOHPN3Y6NmEUTSWRjVdG78RJSadrvgTo5LcK-3gYWEZ32X6ECE0pFsDeY_Bhw4NjywjG10A6Mtpy0qC_Yom9YiKpPzqyX83F-QLxOn3mY11nvypAWeQ3hrGv7oUMH5npaG6IRXV31usUClVWKh5SsfYIcwg"/>
+</div>
+<div class="flex-1">
+<textarea class="w-full bg-surface-container-lowest border border-border-quiet rounded-lg p-3 text-body-sm font-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none transition-all" placeholder="Adicionar comentário ou atualização..." rows="3"></textarea>
+<div class="flex justify-end mt-2">
+<button class="bg-primary text-on-primary px-4 py-2 rounded font-label-md text-label-md hover:bg-on-primary-fixed-variant transition-colors shadow-sm">Enviar</button>
+</div>
+</div>
+</div>
+<!-- Timeline List -->
+<div class="relative border-l-2 border-border-quiet ml-5 space-y-6">
+<!-- Item 1 -->
+<div class="relative pl-6">
+<span class="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-surface-card border-2 border-primary flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</span>
+<div class="flex justify-between items-start mb-1">
+<div class="font-bold text-body-sm text-on-surface">Julia Santos (N2 Support)</div>
+<div class="text-xs text-outline">Hoje, 09:15</div>
+</div>
+<p class="text-body-sm text-on-surface-variant bg-surface-container-low p-3 rounded border border-border-quiet mt-2">
+                                        Iniciando investigação. Testei acesso remoto a um dos servidores locais da filial sul e confirmei que a infraestrutura de rede básica está ok. O problema reside no gateway VPN de borda.
+                                    </p>
+</div>
+<!-- Item 2 -->
+<div class="relative pl-6">
+<span class="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-surface-container border-2 border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-outline">history</span>
+</span>
+<div class="flex justify-between items-start mb-1">
+<div class="font-bold text-body-sm text-on-surface text-outline">Sistema</div>
+<div class="text-xs text-outline">Hoje, 08:45</div>
+</div>
+<p class="text-body-sm text-outline italic mt-1">Chamado atribuído a: Julia Santos</p>
+</div>
+<!-- Item 3 -->
+<div class="relative pl-6">
+<span class="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-surface-container border-2 border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-outline">add</span>
+</span>
+<div class="flex justify-between items-start mb-1">
+<div class="font-bold text-body-sm text-on-surface text-outline">Carlos Silva</div>
+<div class="text-xs text-outline">Hoje, 08:30</div>
+</div>
+<p class="text-body-sm text-outline italic mt-1">Chamado criado via portal de autoatendimento.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (Sidebar/Actions) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Actions Card -->
+<div class="bg-surface-card rounded-lg p-card-padding shadow-sm border border-border-quiet">
+<h3 class="text-body-lg font-bold text-primary mb-4">Ações</h3>
+<div class="flex flex-col gap-3">
+<button class="w-full border border-primary text-primary hover:bg-primary/5 py-2.5 rounded font-label-md text-label-md transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                    Alterar Status
+                                </button>
+<button class="w-full border border-primary text-primary hover:bg-primary/5 py-2.5 rounded font-label-md text-label-md transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                                    Atribuir a Mim
+                                </button>
+<button class="w-full bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container py-2.5 rounded font-label-md text-label-md transition-colors flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                    Registrar Solução
+                                </button>
+</div>
+</div>
+<!-- Info Card -->
+<div class="bg-surface-card rounded-lg p-card-padding shadow-sm border border-border-quiet">
+<h3 class="text-body-lg font-bold text-primary mb-4 border-b border-border-quiet pb-2">Detalhes</h3>
+<dl class="space-y-4">
+<div>
+<dt class="text-xs font-label-md text-outline uppercase tracking-wider mb-1">Data de Abertura</dt>
+<dd class="text-body-sm text-on-surface font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-outline">calendar_today</span>
+                                        24 Out 2023, 08:30
+                                    </dd>
+</div>
+<div>
+<dt class="text-xs font-label-md text-outline uppercase tracking-wider mb-1">Solicitante</dt>
+<dd class="text-body-sm text-on-surface font-medium flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Small headshot of an employee wearing casual business attire." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCobkOTuI18Z1TMLv20dsosf9I9l0lRwJxeOIznBqGLENtZ-acuGbqeXsKWuj4Ngrx_tMPgjfW2mZHj3er8bhjZ4SyJyZD2i-29PAgWd_wMniZQx6QA9CZaI-vPvWleEpMw2ijDTVgXkOr0XmNlpUIZaQ_0l8E-3vn-N2D4WQedtRVv_Df4J4-3WoAWxto7ZH5k2KPcZCTMEU9OeO-Fm1wHhg2zkRcBtq7WSk_7sbU5bM10951hGEuGFPBfiNloQYjqV3JqErWBRA"/>
+</div>
+                                        Carlos Silva
+                                    </dd>
+</div>
+<div>
+<dt class="text-xs font-label-md text-outline uppercase tracking-wider mb-1">Sistema/Serviço</dt>
+<dd class="text-body-sm text-on-surface font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-outline">dns</span>
+                                        VPN Corporativa
+                                    </dd>
+</div>
+<div class="pt-2 border-t border-border-quiet">
+<dt class="text-xs font-label-md text-outline uppercase tracking-wider mb-1">Técnico Atribuído</dt>
+<dd class="text-body-sm text-on-surface font-medium flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Small portrait of a female IT professional looking focused." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-NU9-2WfszY0gQBy5W7eB_ItgwgbQi5WBgYKbpk0y6-M7_s2Is0f16PJROdQH0qMkSkRNcOjGFyit0_pCbAH7g96oECAymfbqvN-qdANBVd6QpjUza61tTBHGhirUNZH5q_ZDrP50ZxT7ZXg9tYh5uT77kD9P48i9PnRiZ987yBktm7oUz80nXPpvSnxPIwU1DCmOJvPRlq0qK6SFkCPPaDFGkr9cN-5NuQZitp4ftJ3LcSC9Wnx3YKrV4vTzyWlkxfHg352dpQ"/>
+</div>
+                                        Julia Santos
+                                    </dd>
+</div>
+<div>
+<dt class="text-xs font-label-md text-outline uppercase tracking-wider mb-1">Parceiro (N3)</dt>
+<dd class="text-body-sm text-on-surface font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-outline">business</span>
+                                        Onasys Sec.
+                                    </dd>
+</div>
+</dl>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,26 +1,96 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  MMC Incidências — Design System
+  Paleta MMC: navy institucional (#001736) + laranja de ação (#fb7800).
+  Tokens alinhados ao design Material (navy + laranja) usado nas telas do produto.
+*/
+
+@theme {
+  /* Marca — Navy (ancorado em #001736 / #002b5b) */
+  --color-navy-50: #eef2fb;
+  --color-navy-100: #d6e3ff; /* primary-fixed */
+  --color-navy-200: #a9c7ff; /* primary-fixed-dim — texto da navbar */
+  --color-navy-300: #7594ca; /* on-primary-container */
+  --color-navy-400: #4f6da8;
+  --color-navy-500: #264778; /* on-primary-fixed-variant */
+  --color-navy-600: #002b5b; /* primary-container */
+  --color-navy-700: #001736; /* primary — sidebar, botões */
+  --color-navy-800: #001129;
+  --color-navy-900: #00091c;
+
+  /* Marca — Laranja (ancorado em #fb7800 / #994700) */
+  --color-orange-50: #fff4ec;
+  --color-orange-100: #ffe2cc; /* secondary-fixed */
+  --color-orange-200: #ffc299;
+  --color-orange-300: #ff9d5c;
+  --color-orange-400: #ff8a2e;
+  --color-orange-500: #fb7800; /* secondary-container — ação principal */
+  --color-orange-600: #db6500;
+  --color-orange-700: #994700; /* secondary */
+
+  /* Tokens semânticos */
+  --color-background: #f8f9ff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f2f3fa; /* surface-container-low */
+  --color-surface-sunken: #eceef4; /* surface-container */
+  --color-foreground: #191c21; /* on-surface */
+  --color-muted: #43474f; /* on-surface-variant */
+  --color-faint: #747780; /* outline */
+  --color-border: #e9ecef; /* border-quiet */
+  --color-border-strong: #c4c6d0; /* outline-variant */
+  --color-primary: var(--color-navy-700);
+  --color-primary-foreground: #ffffff;
+  --color-accent: var(--color-orange-500);
+  --color-accent-foreground: #ffffff;
+
+  /* Status */
+  --color-status-open: #2563eb;
+  --color-status-progress: #fb7800;
+  --color-status-resolved: #3aa804;
+  --color-status-closed: #747780;
+  --color-status-critical: #d93025;
+  --color-status-warning: #fbbc04;
+
+  /* Tipografia */
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "JetBrains Mono", monospace;
+
+  /* Raio e sombra */
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --shadow-card: 0 4px 24px rgba(0, 23, 54, 0.04);
+  --shadow-card-hover: 0 8px 32px rgba(0, 23, 54, 0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--color-border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Rótulos/códigos curtos em fonte mono (estilo "label") */
+.font-label {
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
+
+/* Faixa de marca reutilizável */
+.brand-gradient {
+  background-image: linear-gradient(135deg, var(--color-navy-700), var(--color-navy-600) 60%, var(--color-navy-500));
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy-200);
+  border-radius: 9999px;
 }
