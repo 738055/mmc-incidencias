@@ -2,16 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Send, GraduationCap } from "lucide-react";
+import { Send, GraduationCap, Ticket, ThumbsUp, ThumbsDown, Plus } from "lucide-react";
 import { MascotAvatar, type MascotState } from "@/components/mascot/mascot-avatar";
 import { cn } from "@/lib/utils";
+
+type TicketRef = {
+  id: string;
+  ref: number;
+  title: string;
+  kind: "incident" | "improvement";
+};
 
 type Msg = {
   id: string;
   role: "user" | "assistant";
   content: string;
   tutorials?: { id: string; title: string }[];
+  incidents?: TicketRef[];
+  /** Mostra "isso ajudou? 👍/👎" abaixo da resposta. */
+  ask?: boolean;
+  /** Mostra o botão "Abrir um chamado". */
+  suggestNew?: boolean;
 };
+
+function ticketHref(t: TicketRef) {
+  return `${t.kind === "improvement" ? "/melhorias" : "/incidencias"}/${t.id}`;
+}
 
 const uid = () => Math.random().toString(36).slice(2);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -59,8 +75,10 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
       const ok: boolean = data.ok !== false && res.ok;
       const answer: string = data.answer ?? "Não consegui responder agora.";
       const tutorials: { id: string; title: string }[] = data.tutorials ?? [];
+      const incidents: TicketRef[] = data.incidents ?? [];
+      const found = tutorials.length > 0 || incidents.length > 0;
       const id = uid();
-      setMessages((m) => [...m, { id, role: "assistant", content: "", tutorials }]);
+      setMessages((m) => [...m, { id, role: "assistant", content: "", tutorials, incidents }]);
 
       // Revela o texto aos poucos (Bugzito fica "parado" exibindo a resposta).
       setMascot("idle");
@@ -69,14 +87,17 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
         setMessages((m) => m.map((x) => (x.id === id ? { ...x, content: slice } : x)));
         await sleep(14);
       }
-      setMessages((m) => m.map((x) => (x.id === id ? { ...x, content: answer } : x)));
+      // Achou algo → pergunta se ajudou; não achou (e IA ok) → sugere abrir chamado.
+      setMessages((m) =>
+        m.map((x) =>
+          x.id === id
+            ? { ...x, content: answer, ask: ok && found, suggestNew: ok && !found }
+            : x,
+        ),
+      );
 
       // Expressão final: triste se a IA não ajudou, confuso se não achou base.
-      const finalState: MascotState = !ok
-        ? "sad"
-        : tutorials.length === 0
-          ? "confused"
-          : "idle";
+      const finalState: MascotState = !ok ? "sad" : found ? "idle" : "confused";
       setMascot(finalState);
       await sleep(1800);
       setMascot("idle");
@@ -93,6 +114,34 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
       ]);
       await sleep(1800);
       setMascot("idle");
+    }
+  }
+
+  /** Resposta ao "isso ajudou?": se não, orienta abrir chamado (evita duplicar). */
+  function helped(msgId: string, yes: boolean) {
+    setMessages((m) => m.map((x) => (x.id === msgId ? { ...x, ask: false } : x)));
+    if (yes) {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          role: "assistant",
+          content: "Que bom que ajudou! 🎉 Se precisar de mais alguma coisa, é só me chamar.",
+        },
+      ]);
+      setMascot("idle");
+    } else {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          role: "assistant",
+          content:
+            "Sem problema. Então o melhor é registrar um chamado para a equipe te ajudar — assim ninguém abre dois chamados para a mesma coisa. 👇",
+          suggestNew: true,
+        },
+      ]);
+      setMascot("confused");
     }
   }
 
@@ -128,6 +177,25 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
               )}
             >
               <p className="whitespace-pre-wrap">{m.content}</p>
+
+              {m.incidents && m.incidents.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {m.incidents.map((t) => (
+                    <Link
+                      key={t.id}
+                      href={ticketHref(t)}
+                      title={t.title}
+                      className="inline-flex max-w-full items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-navy-700 ring-1 ring-inset ring-border hover:ring-navy-300"
+                    >
+                      <Ticket className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        #{t.ref} — {t.title}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               {m.tutorials && m.tutorials.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {m.tutorials.map((t) => (
@@ -140,6 +208,35 @@ export function AssistantChat({ firstName }: { firstName?: string }) {
                     </Link>
                   ))}
                 </div>
+              )}
+
+              {m.ask && (
+                <div className="mt-3 flex items-center gap-2 border-t border-border pt-2.5">
+                  <span className="text-xs text-muted">Isso ajudou?</span>
+                  <button
+                    type="button"
+                    onClick={() => helped(m.id, true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-border hover:ring-green-300"
+                  >
+                    <ThumbsUp className="h-3.5 w-3.5" /> Sim
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => helped(m.id, false)}
+                    className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-border hover:ring-red-300"
+                  >
+                    <ThumbsDown className="h-3.5 w-3.5" /> Não
+                  </button>
+                </div>
+              )}
+
+              {m.suggestNew && (
+                <Link
+                  href="/incidencias/nova"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-orange-600"
+                >
+                  <Plus className="h-4 w-4" /> Abrir um chamado
+                </Link>
               )}
             </div>
           </div>

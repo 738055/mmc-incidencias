@@ -4,26 +4,34 @@ import { Search, BookOpen, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
 import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Base de conhecimento" };
 
+const PAGE_SIZE = 20;
+
 export default async function KnowledgeBasePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
   await requireProfile();
   const supabase = await createClient();
 
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+
   let query = supabase
     .from("incidents")
-    .select("id, ref, title, resolution, resolved_at, systems(name)")
-    .in("status", ["resolved", "closed"])
+    .select("id, ref, title, resolution, resolved_at, systems(name)", {
+      count: "exact",
+    })
+    .in("status", ["resolved", "closed", "delivered"])
     .not("resolution", "is", null)
     .order("resolved_at", { ascending: false })
-    .limit(50);
+    .range(from, from + PAGE_SIZE - 1);
 
   if (q && q.trim()) {
     query = query.textSearch("search", q.trim(), {
@@ -32,7 +40,16 @@ export default async function KnowledgeBasePage({
     });
   }
 
-  const { data: items } = await query;
+  const { data: items, count } = await query;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (p > 1) params.set("page", String(p));
+    const s = params.toString();
+    return s ? `/base-conhecimento?${s}` : "/base-conhecimento";
+  }
 
   return (
     <div className="space-y-5">
@@ -88,6 +105,8 @@ export default async function KnowledgeBasePage({
           </Card>
         )}
       </div>
+
+      <Pagination page={page} totalPages={totalPages} hrefForPage={pageHref} />
     </div>
   );
 }

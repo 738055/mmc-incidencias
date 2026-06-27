@@ -8,27 +8,34 @@ import type { IncidentStatus } from "@/lib/supabase/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IncidentRow } from "@/components/incidents/incident-row";
+import { Pagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Incidências" };
 
+const PAGE_SIZE = 20;
+
 export default async function IncidentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
-  const { status, q } = await searchParams;
+  const { status, q, page: pageParam } = await searchParams;
   await requireProfile();
   const supabase = await createClient();
+
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("incidents")
     .select(
       "id, ref, title, status, priority, created_at, systems(name), companies(name)",
+      { count: "exact" },
     )
     .eq("kind", "incident")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .range(from, from + PAGE_SIZE - 1);
 
   if (status && STATUS_ORDER.includes(status as IncidentStatus)) {
     query = query.eq("status", status as IncidentStatus);
@@ -40,7 +47,8 @@ export default async function IncidentsPage({
     });
   }
 
-  const { data: incidents } = await query;
+  const { data: incidents, count } = await query;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   const filters = [
     { key: "", label: "Todos" },
@@ -51,6 +59,15 @@ export default async function IncidentsPage({
     const params = new URLSearchParams();
     if (key) params.set("status", key);
     if (q) params.set("q", q);
+    const s = params.toString();
+    return s ? `/incidencias?${s}` : "/incidencias";
+  }
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (q) params.set("q", q);
+    if (p > 1) params.set("page", String(p));
     const s = params.toString();
     return s ? `/incidencias?${s}` : "/incidencias";
   }
@@ -114,6 +131,8 @@ export default async function IncidentsPage({
           </p>
         )}
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} hrefForPage={pageHref} />
     </div>
   );
 }

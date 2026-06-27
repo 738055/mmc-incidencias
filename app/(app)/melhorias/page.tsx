@@ -7,28 +7,35 @@ import { STATUS_LABELS, IMPROVEMENT_STATUS_ORDER } from "@/lib/domain";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IncidentRow } from "@/components/incidents/incident-row";
+import { Pagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import type { IncidentStatus } from "@/lib/supabase/types";
 
 export const metadata: Metadata = { title: "Melhorias & Desenvolvimento" };
 
+const PAGE_SIZE = 20;
+
 export default async function ImprovementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
-  const { status, q } = await searchParams;
+  const { status, q, page: pageParam } = await searchParams;
   await requireProfile();
   const supabase = await createClient();
+
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("incidents")
     .select(
       "id, ref, title, status, priority, created_at, systems(name), companies(name)",
+      { count: "exact" },
     )
     .eq("kind", "improvement")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .range(from, from + PAGE_SIZE - 1);
 
   if (status && IMPROVEMENT_STATUS_ORDER.includes(status as IncidentStatus)) {
     query = query.eq("status", status as IncidentStatus);
@@ -40,7 +47,8 @@ export default async function ImprovementsPage({
     });
   }
 
-  const { data: items } = await query;
+  const { data: items, count } = await query;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   const filters = [
     { key: "", label: "Todas" },
@@ -51,6 +59,15 @@ export default async function ImprovementsPage({
     const params = new URLSearchParams();
     if (key) params.set("status", key);
     if (q) params.set("q", q);
+    const s = params.toString();
+    return s ? `/melhorias?${s}` : "/melhorias";
+  }
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (q) params.set("q", q);
+    if (p > 1) params.set("page", String(p));
     const s = params.toString();
     return s ? `/melhorias?${s}` : "/melhorias";
   }
@@ -114,6 +131,8 @@ export default async function ImprovementsPage({
           </p>
         )}
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} hrefForPage={pageHref} />
     </div>
   );
 }

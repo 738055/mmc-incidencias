@@ -3,8 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { assistantReply, type ChatTurn } from "@/lib/ai";
 import { retrieveContext } from "@/lib/ai/retrieval";
+import { rateLimit } from "@/lib/rate-limit";
 
 type Body = { messages?: ChatTurn[] };
+
+/** Limite por usuário: protege o custo da OpenAI contra loops/abuso. */
+const RATE_LIMIT = 15; // mensagens
+const RATE_WINDOW_MS = 60_000; // por minuto
 
 /**
  * Assistente de chat (RAG): embeda a pergunta, busca tutoriais + soluções
@@ -14,6 +19,19 @@ export async function POST(req: Request) {
   const profile = await getSessionProfile();
   if (!profile) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+
+  const rl = rateLimit(`assistant:${profile.id}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rl.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        answer: `Você está enviando mensagens rápido demais. Tente novamente em ${rl.retryAfter}s.`,
+        tutorials: [],
+        incidents: [],
+      },
+      { status: 429 },
+    );
   }
 
   let body: Body;
@@ -70,5 +88,14 @@ export async function POST(req: Request) {
     answer,
     // Tutoriais citados (para botões de atalho no chat).
     tutorials: tutorials.map((t) => ({ id: t.id, title: t.title })),
+    // Chamados resolvidos correspondentes (link "veja a solução" + "isso ajudou?").
+    incidents: incidents
+      .filter((i) => i.id && i.resolution)
+      .map((i) => ({
+        id: i.id,
+        ref: i.ref,
+        title: i.title,
+        kind: i.kind ?? "incident",
+      })),
   });
 }

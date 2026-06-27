@@ -185,9 +185,11 @@ export type AiSuggestionFeedback = {
 
 /** Resultado da RPC `match_incidents` (busca semântica por similaridade). */
 export type MatchedIncident = {
+  id: string;
   ref: number;
   title: string;
   resolution: string | null;
+  kind: TicketKind;
   similarity: number;
 }
 

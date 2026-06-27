@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -102,96 +103,89 @@ export async function createIncidentAction(
     );
   }
 
-  // URLs assinadas dos anexos de imagem (para IA e e-mail)
-  const imagePaths = attachments
-    .filter((a) => a.mime.startsWith("image/"))
-    .map((a) => a.path);
-  const imageUrls: string[] = [];
-  for (const path of imagePaths) {
-    const { data } = await supabase.storage
-      .from("attachments")
-      .createSignedUrl(path, SIGNED_URL_TTL);
-    if (data?.signedUrl) imageUrls.push(data.signedUrl);
-  }
-
-  // IA: embedding (busca semântica) + análise de imagens + TRIAGEM unificada
-  // (dúvida de uso vs defeito + solução reaproveitável numa só chamada à LLM).
-  // Best-effort — não bloqueia o fluxo de criação.
-  try {
-    const { embedding, incidents: similar, tutorials } = await retrieveContext(
-      supabase,
-      `${parsed.data.title}\n\n${parsed.data.description}`,
-      { excludeId: incident.id, ftsQuery: parsed.data.title },
-    );
-
-    const [imageAnalysis, triage] = await Promise.all([
-      analyzeIncidentImages(imageUrls, parsed.data),
-      triageIncident(parsed.data, { similar, tutorials }),
-    ]);
-
-    const blocks = [
-      triage,
-      imageAnalysis && `🖼️ Análise das imagens:\n${imageAnalysis}`,
-    ].filter(Boolean);
-
-    // Campos calculados no servidor — gravados via service role para não
-    // esbarrar nas restrições de RLS de atualização do solicitante.
-    const update: {
-      embedding?: string;
-      ai_analysis?: string;
-      ai_suggested_refs?: number[];
-    } = {};
-    if (embedding) update.embedding = `[${embedding.join(",")}]`;
-    if (blocks.length) update.ai_analysis = blocks.join("\n\n");
-    // Refs que embasaram a triagem — usadas pelo aprendizado por feedback.
-    const refs = similar.filter((s) => s.resolution).map((s) => s.ref);
-    if (triage && refs.length) update.ai_suggested_refs = refs;
-    if (Object.keys(update).length > 0) {
-      await createAdminClient()
-        .from("incidents")
-        .update(update)
-        .eq("id", incident.id);
-    }
-  } catch (err) {
-    console.error("[incident] IA:", err);
-  }
-
   const basePath = kind === "improvement" ? "/melhorias" : "/incidencias";
+  const { data: parsedData } = parsed;
 
-  // E-mail para a empresa parceira, se direcionado
-  if (parsed.data.companyId) {
+  // PÓS-PROCESSAMENTO em background (after): URLs assinadas + IA (embedding,
+  // análise de imagens, triagem) + e-mail à empresa parceira. Roda DEPOIS da
+  // resposta, então a criação do chamado é instantânea — a OpenAI/e-mail não
+  // travam o redirect. O ai_analysis aparece em seguida (realtime/refresh).
+  after(async () => {
+    const admin = createAdminClient();
     try {
-      const { data: company } = await supabase
-        .from("companies")
-        .select("name, contact_emails")
-        .eq("id", parsed.data.companyId)
-        .single();
-      const { data: system } = parsed.data.systemId
-        ? await supabase
-            .from("systems")
-            .select("name")
-            .eq("id", parsed.data.systemId)
-            .single()
-        : { data: null };
+      // URLs assinadas dos anexos de imagem (para IA e e-mail).
+      const imageUrls: string[] = [];
+      for (const a of attachments.filter((a) => a.mime.startsWith("image/"))) {
+        const { data } = await admin.storage
+          .from("attachments")
+          .createSignedUrl(a.path, SIGNED_URL_TTL);
+        if (data?.signedUrl) imageUrls.push(data.signedUrl);
+      }
 
-      if (company && company.contact_emails?.length) {
-        await sendIncidentEmail(company.contact_emails, {
-          ref: incident.ref,
-          kindLabel: KIND_LABELS[kind],
-          title: parsed.data.title,
-          description: parsed.data.description,
-          systemName: system?.name ?? null,
-          priorityLabel: PRIORITY_LABELS[parsed.data.priority],
-          requesterName: profile.full_name || profile.email,
-          companyName: company.name,
-          url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${basePath}/${incident.id}`,
-          imageUrls,
-        });
+      // IA: embedding + análise de imagens + triagem unificada.
+      const { embedding, incidents: similar, tutorials } = await retrieveContext(
+        admin,
+        `${parsedData.title}\n\n${parsedData.description}`,
+        { excludeId: incident.id, ftsQuery: parsedData.title },
+      );
+
+      const [imageAnalysis, triage] = await Promise.all([
+        analyzeIncidentImages(imageUrls, parsedData),
+        triageIncident(parsedData, { similar, tutorials }),
+      ]);
+
+      const blocks = [
+        triage,
+        imageAnalysis && `🖼️ Análise das imagens:\n${imageAnalysis}`,
+      ].filter(Boolean);
+
+      const update: {
+        embedding?: string;
+        ai_analysis?: string;
+        ai_suggested_refs?: number[];
+      } = {};
+      if (embedding) update.embedding = `[${embedding.join(",")}]`;
+      if (blocks.length) update.ai_analysis = blocks.join("\n\n");
+      const refs = similar.filter((s) => s.resolution).map((s) => s.ref);
+      if (triage && refs.length) update.ai_suggested_refs = refs;
+      if (Object.keys(update).length > 0) {
+        await admin.from("incidents").update(update).eq("id", incident.id);
+      }
+
+      // E-mail para a empresa parceira, se direcionado.
+      if (parsedData.companyId) {
+        const { data: company } = await admin
+          .from("companies")
+          .select("name, contact_emails")
+          .eq("id", parsedData.companyId)
+          .single();
+        const { data: system } = parsedData.systemId
+          ? await admin
+              .from("systems")
+              .select("name")
+              .eq("id", parsedData.systemId)
+              .single()
+          : { data: null };
+
+        if (company && company.contact_emails?.length) {
+          await sendIncidentEmail(company.contact_emails, {
+            ref: incident.ref,
+            kindLabel: KIND_LABELS[kind],
+            title: parsedData.title,
+            description: parsedData.description,
+            systemName: system?.name ?? null,
+            priorityLabel: PRIORITY_LABELS[parsedData.priority],
+            requesterName: profile.full_name || profile.email,
+            companyName: company.name,
+            url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${basePath}/${incident.id}`,
+            imageUrls,
+          });
+        }
       }
     } catch (err) {
-      console.error("[incident] e-mail:", err);
+      console.error("[incident] pós-processamento:", err);
     }
-  }
+  });
 
   revalidatePath(basePath);
   redirect(`${basePath}/${incident.id}`);

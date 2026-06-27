@@ -50,9 +50,11 @@ async function findSimilarIncidents(
     });
     if (!error && data && data.length > 0) {
       candidates = data.map((d) => ({
+        id: d.id,
         ref: d.ref,
         title: d.title,
         resolution: d.resolution,
+        kind: d.kind,
       }));
     }
   }
@@ -60,7 +62,7 @@ async function findSimilarIncidents(
   if (candidates.length === 0) {
     const { data } = await supabase
       .from("incidents")
-      .select("ref, title, resolution")
+      .select("id, ref, title, resolution, kind")
       .in("status", ["resolved", "closed", "delivered"])
       .textSearch("search", ftsQuery, { type: "websearch", config: "portuguese" })
       .limit(6);

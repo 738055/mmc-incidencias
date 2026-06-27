@@ -17,18 +17,15 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { isStaff, isDoneStatus, statusOrderFor, STATUS_LABELS } from "@/lib/domain";
+import { isStaff, isDoneStatus } from "@/lib/domain";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { StatusBadge, PriorityBadge } from "@/components/incidents/badges";
 import { CommentForm } from "@/components/incidents/comment-form";
 import { ResolvePanel } from "@/components/incidents/resolve-panel";
 import { AiFeedback } from "@/components/incidents/ai-feedback";
+import { TicketActions } from "@/components/incidents/ticket-actions";
+import { TicketLive } from "@/components/incidents/ticket-live";
 import { MediaGrid } from "@/components/media/media-grid";
-import {
-  assignToMeAction,
-  updateStatusAction,
-} from "@/app/(app)/incidencias/actions";
 import { formatDateTime } from "@/lib/utils";
 import type { TicketKind } from "@/lib/supabase/types";
 
@@ -110,6 +107,7 @@ export async function TicketDetail({
 
   return (
     <div className="space-y-7">
+      <TicketLive incidentId={inc.id} />
       <Link
         href={backHref}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-navy-700"
@@ -327,37 +325,12 @@ export async function TicketDetail({
                   Ações
                 </h2>
 
-                {!inc.assigned_to && (
-                  <form action={assignToMeAction}>
-                    <input type="hidden" name="incidentId" value={inc.id} />
-                    <Button type="submit" variant="outline" className="w-full">
-                      Atribuir a mim
-                    </Button>
-                  </form>
-                )}
-
-                <form action={updateStatusAction} className="space-y-2">
-                  <input type="hidden" name="incidentId" value={inc.id} />
-                  <label className="font-label text-xs font-medium uppercase tracking-wider text-faint">
-                    Alterar status
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      name="status"
-                      defaultValue={inc.status}
-                      className="h-10 flex-1 rounded-lg border border-border bg-surface px-3 text-sm focus-visible:border-navy-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-600"
-                    >
-                      {statusOrderFor(kind).map((s) => (
-                        <option key={s} value={s}>
-                          {STATUS_LABELS[s]}
-                        </option>
-                      ))}
-                    </select>
-                    <Button type="submit" size="sm">
-                      Salvar
-                    </Button>
-                  </div>
-                </form>
+                <TicketActions
+                  incidentId={inc.id}
+                  kind={kind}
+                  status={inc.status}
+                  assigned={!!inc.assigned_to}
+                />
               </CardContent>
             </Card>
           )}

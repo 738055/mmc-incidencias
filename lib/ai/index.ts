@@ -46,9 +46,11 @@ export async function embedText(text: string): Promise<number[] | null> {
 }
 
 export interface SimilarIncident {
+  id?: string;
   ref: number;
   title: string;
   resolution: string | null;
+  kind?: "incident" | "improvement";
 }
 
 export interface TutorialMatch {
