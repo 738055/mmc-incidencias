@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { ServiceWorkerRegister } from "@/components/layout/sw-register";
 import { AssistantWidget } from "@/components/assistente/assistant-widget";
 import { requireProfile } from "@/lib/auth";
 
@@ -21,6 +22,7 @@ export default async function AppLayout({
         </main>
       </div>
       <AssistantWidget firstName={firstName} />
+      <ServiceWorkerRegister />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendStatusEmail } from "@/lib/email/send";
+import { sendPush } from "@/lib/push";
 import type { NotificationType } from "@/lib/supabase/types";
 
 /**
@@ -44,6 +45,17 @@ export async function notify(input: NotifyInput): Promise<void> {
     });
   } catch (err) {
     console.error("[notify] insert:", err);
+  }
+
+  // Web Push (independente do in-app e do e-mail; best-effort).
+  try {
+    await sendPush(input.userId, {
+      title: input.title,
+      body: input.body,
+      link: input.link,
+    });
+  } catch (err) {
+    console.error("[notify] push:", err);
   }
 
   // E-mail é independente do in-app: uma falha não afeta a outra.

@@ -52,6 +52,7 @@ export interface SimilarIncident {
 }
 
 export interface TutorialMatch {
+  id?: string;
   title: string;
   content: string | null;
   category: string | null;
@@ -135,40 +136,63 @@ export async function analyzeIncidentImages(
 }
 
 /**
- * Gera uma sugestão "isto já foi resolvido antes" a partir de chamados parecidos.
- * Retorna null se a IA não estiver configurada ou não houver similares.
+ * TRIAGEM unificada (1 só chamada à LLM). Combina o que antes eram duas chamadas
+ * separadas (`suggestFromSimilar` + `suggestFromTutorials`): num único prompt,
+ * avalia se a solicitação é DÚVIDA DE USO/PROCESSO (não defeito) — apontando o
+ * tutorial — e/ou se um chamado resolvido parecido já resolve o caso — citando o
+ * número (#ref). Retorna o texto pronto para o bloco de análise da IA, ou null
+ * se a IA não estiver configurada / não houver nada útil.
  */
-export async function suggestFromSimilar(
+export async function triageIncident(
   current: { title: string; description: string },
-  similar: SimilarIncident[],
+  context: { similar: SimilarIncident[]; tutorials: TutorialMatch[] },
 ): Promise<string | null> {
   const client = getClient();
-  if (!client || similar.length === 0) return null;
+  if (!client) return null;
 
-  const resolved = similar.filter((s) => s.resolution);
-  if (resolved.length === 0) return null;
+  const resolved = context.similar.filter((s) => s.resolution);
+  if (resolved.length === 0 && context.tutorials.length === 0) return null;
+
+  const tutorialsText = context.tutorials.length
+    ? context.tutorials
+        .map(
+          (t) =>
+            `• ${t.title}${t.category ? ` [${t.category}]` : ""}\n${(t.content ?? "").slice(0, 600)}`,
+        )
+        .join("\n\n")
+    : "(nenhum tutorial relevante)";
+
+  const similarText = resolved.length
+    ? resolved
+        .map((s) => `#${s.ref} — ${s.title}\nSolução: ${s.resolution}`)
+        .join("\n\n")
+    : "(nenhum chamado resolvido parecido)";
 
   try {
     const completion = await client.chat.completions.create({
       model: MODEL,
-      max_tokens: 600,
+      max_tokens: 700,
       messages: [
         {
           role: "system",
           content:
-            "Você ajuda o suporte da MMC a reaproveitar soluções. Dado um novo problema " +
-            "e chamados anteriores resolvidos parecidos, diga se algum resolve o caso atual " +
-            "e resuma a solução, citando o número do chamado (ex.: #968). Se nada servir, " +
-            "responda exatamente 'SEM_SUGESTAO'. Responda em português, curto e direto.",
+            "Você faz a TRIAGEM de chamados do suporte da MMC. Com base nos TUTORIAIS e " +
+            "nos CHAMADOS RESOLVIDOS parecidos, produza uma análise curta em português " +
+            "do Brasil cobrindo, quando fizer sentido:\n" +
+            "1) DÚVIDA DE USO vs DEFEITO — se o pedido for a pessoa não saber operar o " +
+            "sistema (não um bug) e houver tutorial sobre o tema, deixe claro que " +
+            "provavelmente NÃO é um defeito e cite o tutorial pelo título.\n" +
+            "2) SOLUÇÃO REAPROVEITÁVEL — se algum chamado resolvido já resolve o caso, " +
+            "resuma a solução citando o número (ex.: #968).\n" +
+            "Use no máximo um parágrafo por item, com os rótulos. Não invente passos " +
+            "fora do material. Se NADA for útil, responda exatamente 'SEM_SUGESTAO'.",
         },
         {
           role: "user",
           content:
-            `NOVO PROBLEMA:\nTítulo: ${current.title}\nDescrição: ${current.description}\n\n` +
-            `CHAMADOS RESOLVIDOS PARECIDOS:\n` +
-            resolved
-              .map((s) => `#${s.ref} — ${s.title}\nSolução: ${s.resolution}`)
-              .join("\n\n"),
+            `SOLICITAÇÃO:\nTítulo: ${current.title}\nDescrição: ${current.description}\n\n` +
+            `TUTORIAIS DISPONÍVEIS:\n${tutorialsText}\n\n` +
+            `CHAMADOS RESOLVIDOS PARECIDOS:\n${similarText}`,
         },
       ],
     });
@@ -177,62 +201,7 @@ export async function suggestFromSimilar(
     if (!text || text.includes("SEM_SUGESTAO")) return null;
     return text;
   } catch (err) {
-    console.error("[ai] suggestFromSimilar:", err);
-    return null;
-  }
-}
-
-/**
- * Avalia se a solicitação é, na verdade, uma DÚVIDA DE USO / FALTA DE PROCESSO
- * (não um defeito do sistema) e, se houver tutorial que ensine o tema, aponta-o.
- * Retorna null se a IA não estiver configurada, não houver tutoriais, ou se for
- * claramente um defeito.
- */
-export async function suggestFromTutorials(
-  current: { title: string; description: string },
-  tutorials: TutorialMatch[],
-): Promise<string | null> {
-  const client = getClient();
-  if (!client || tutorials.length === 0) return null;
-
-  try {
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      max_tokens: 500,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Você faz a triagem de chamados de suporte da MMC. Existem TUTORIAIS que " +
-            "ensinam a operar/usar os sistemas. Avalie se o pedido do usuário é, na " +
-            "verdade, uma DÚVIDA DE USO ou FALTA DE PROCESSO/CONHECIMENTO (ou seja, " +
-            "NÃO é um defeito/bug do sistema, mas sim a pessoa não saber como executar " +
-            "a função). Se for esse o caso e algum tutorial cobrir o tema, responda em " +
-            "português, curto: deixe claro que provavelmente NÃO é um defeito e indique " +
-            "o tutorial pelo título, resumindo o que ele ensina. Se for claramente um " +
-            "defeito do sistema, ou se nenhum tutorial servir, responda exatamente " +
-            "'SEM_SUGESTAO'.",
-        },
-        {
-          role: "user",
-          content:
-            `SOLICITAÇÃO DO USUÁRIO:\nTítulo: ${current.title}\nDescrição: ${current.description}\n\n` +
-            `TUTORIAIS DISPONÍVEIS:\n` +
-            tutorials
-              .map(
-                (t) =>
-                  `• ${t.title}${t.category ? ` [${t.category}]` : ""}\n${(t.content ?? "").slice(0, 600)}`,
-              )
-              .join("\n\n"),
-        },
-      ],
-    });
-
-    const text = extractText(completion);
-    if (!text || text.includes("SEM_SUGESTAO")) return null;
-    return text;
-  } catch (err) {
-    console.error("[ai] suggestFromTutorials:", err);
+    console.error("[ai] triageIncident:", err);
     return null;
   }
 }

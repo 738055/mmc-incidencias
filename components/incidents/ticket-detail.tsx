@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, PriorityBadge } from "@/components/incidents/badges";
 import { CommentForm } from "@/components/incidents/comment-form";
 import { ResolvePanel } from "@/components/incidents/resolve-panel";
+import { AiFeedback } from "@/components/incidents/ai-feedback";
 import { MediaGrid } from "@/components/media/media-grid";
 import {
   assignToMeAction,
@@ -88,6 +89,19 @@ export async function TicketDetail({
   }
 
   const staff = isStaff(profile.role);
+
+  // Voto do técnico atual sobre a sugestão de IA (só equipe).
+  let aiFeedback: boolean | null = null;
+  if (staff) {
+    const { data: fb } = await supabase
+      .from("ai_suggestion_feedback")
+      .select("helpful")
+      .eq("incident_id", id)
+      .eq("user_id", profile.id)
+      .maybeSingle();
+    aiFeedback = fb ? fb.helpful : null;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const inc = incident as any;
   const kind: TicketKind = inc.kind ?? expectedKind;
@@ -164,6 +178,7 @@ export async function TicketDetail({
                     {inc.ai_analysis}
                   </p>
                 </div>
+                {staff && <AiFeedback incidentId={inc.id} initial={aiFeedback} />}
               </CardContent>
             </Card>
           )}

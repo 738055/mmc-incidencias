@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Users, Clock, ScrollText, UserPlus } from "lucide-react";
+import { Users, Clock, ScrollText, UserPlus, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import {
@@ -18,6 +18,7 @@ import {
   setRoleAction,
   approveUserAction,
   setStatusAction,
+  backfillEmbeddingsAction,
 } from "@/app/(app)/admin/actions";
 import { RestrictedNotice } from "@/components/layout/restricted";
 import { formatDateTime } from "@/lib/utils";
@@ -50,11 +51,18 @@ export default async function AdminUsersPage() {
             Gerencie sistemas, empresas parceiras e usuários.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/auditoria">
-            <ScrollText className="h-4 w-4" /> Auditoria
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <form action={backfillEmbeddingsAction}>
+            <Button type="submit" variant="outline" size="sm" title="Gera os embeddings que faltam em chamados concluídos e tutoriais publicados">
+              <Sparkles className="h-4 w-4" /> Reprocessar IA
+            </Button>
+          </form>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/auditoria">
+              <ScrollText className="h-4 w-4" /> Auditoria
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <AdminTabs />

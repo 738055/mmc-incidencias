@@ -2,52 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Ticket,
-  Rocket,
-  BookOpen,
-  GraduationCap,
-  Bot,
-  Server,
-  Users,
-  Building2,
-  Plus,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/supabase/types";
 import { isStaff } from "@/lib/domain";
-
-const baseNav = [
-  { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
-  { href: "/incidencias", label: "Incidências", icon: Ticket },
-  { href: "/melhorias", label: "Melhorias", icon: Rocket },
-  { href: "/base-conhecimento", label: "Base de conhecimento", icon: BookOpen },
-  { href: "/tutoriais", label: "Tutoriais", icon: GraduationCap },
-  { href: "/assistente", label: "Assistente IA", icon: Bot },
-];
-
-const adminNav = [
-  { href: "/sistemas", label: "Sistemas", icon: Server },
-  { href: "/empresas", label: "Empresas parceiras", icon: Building2 },
-  { href: "/admin", label: "Usuários", icon: Users },
-];
-
-type NavIcon = typeof Ticket;
+import { baseNav, adminNav, type NavItem } from "./nav-items";
 
 export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
 
-  function NavLink({
-    href,
-    label,
-    icon: Icon,
-  }: {
-    href: string;
-    label: string;
-    icon: NavIcon;
-  }) {
+  function NavLink({ href, label, icon: Icon }: NavItem) {
     const active = pathname === href || pathname.startsWith(`${href}/`);
     return (
       <Link

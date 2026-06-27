@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
-import {
-  assistantReply,
-  embedText,
-  type ChatTurn,
-} from "@/lib/ai";
+import { assistantReply, type ChatTurn } from "@/lib/ai";
+import { retrieveContext } from "@/lib/ai/retrieval";
 
 type Body = { messages?: ChatTurn[] };
 
@@ -42,58 +39,12 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
 
-  // RAG: busca semântica de tutoriais + soluções. Cai para full-text sem IA.
-  const embedding = await embedText(lastUser.content);
-
-  let tutorials: AssistantTutorial[] = [];
-  let incidents: AssistantIncident[] = [];
-
-  if (embedding) {
-    const vec = `[${embedding.join(",")}]`;
-    const [tut, inc] = await Promise.all([
-      supabase.rpc("match_tutorials", {
-        query_embedding: vec,
-        match_count: 4,
-        similarity_threshold: 0.3,
-      }),
-      supabase.rpc("match_incidents", {
-        query_embedding: vec,
-        match_count: 4,
-        similarity_threshold: 0.3,
-      }),
-    ]);
-    tutorials =
-      tut.data?.map((t) => ({
-        id: t.id,
-        title: t.title,
-        content: t.content,
-        category: t.category,
-      })) ?? [];
-    incidents =
-      inc.data?.map((i) => ({
-        ref: i.ref,
-        title: i.title,
-        resolution: i.resolution,
-      })) ?? [];
-  }
-
-  if (tutorials.length === 0) {
-    const { data } = await supabase
-      .from("tutorials")
-      .select("id, title, content, category")
-      .textSearch("search", lastUser.content, {
-        type: "websearch",
-        config: "portuguese",
-      })
-      .limit(4);
-    tutorials =
-      data?.map((t) => ({
-        id: t.id,
-        title: t.title,
-        content: t.content,
-        category: t.category,
-      })) ?? [];
-  }
+  // RAG compartilhado: busca semântica de tutoriais + soluções (fallback FTS) e
+  // aprende com o feedback (soluções rejeitadas deixam de aparecer).
+  const { tutorials, incidents } = await retrieveContext(
+    supabase,
+    lastUser.content,
+  );
 
   const answer = await assistantReply(turns, {
     tutorials: tutorials.map(({ title, content, category }) => ({
@@ -121,15 +72,3 @@ export async function POST(req: Request) {
     tutorials: tutorials.map((t) => ({ id: t.id, title: t.title })),
   });
 }
-
-type AssistantTutorial = {
-  id: string;
-  title: string;
-  content: string | null;
-  category: string | null;
-};
-type AssistantIncident = {
-  ref: number;
-  title: string;
-  resolution: string | null;
-};

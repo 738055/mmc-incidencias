@@ -20,14 +20,8 @@ import {
   resolveSchema,
 } from "@/lib/validations";
 import { sendIncidentEmail } from "@/lib/email/send";
-import {
-  analyzeIncidentImages,
-  suggestFromSimilar,
-  suggestFromTutorials,
-  embedText,
-  type SimilarIncident,
-  type TutorialMatch,
-} from "@/lib/ai";
+import { analyzeIncidentImages, triageIncident, embedText } from "@/lib/ai";
+import { retrieveContext } from "@/lib/ai/retrieval";
 import { notify } from "@/lib/notifications";
 
 type AttachmentInput = {
@@ -120,35 +114,38 @@ export async function createIncidentAction(
     if (data?.signedUrl) imageUrls.push(data.signedUrl);
   }
 
-  // IA: embedding (busca semântica) + análise de imagens + sugestão de
-  // chamados parecidos (best-effort — não bloqueia o fluxo de criação).
+  // IA: embedding (busca semântica) + análise de imagens + TRIAGEM unificada
+  // (dúvida de uso vs defeito + solução reaproveitável numa só chamada à LLM).
+  // Best-effort — não bloqueia o fluxo de criação.
   try {
-    const embedding = await embedText(
+    const { embedding, incidents: similar, tutorials } = await retrieveContext(
+      supabase,
       `${parsed.data.title}\n\n${parsed.data.description}`,
+      { excludeId: incident.id, ftsQuery: parsed.data.title },
     );
 
-    const [imageAnalysis, similar, tutorials] = await Promise.all([
+    const [imageAnalysis, triage] = await Promise.all([
       analyzeIncidentImages(imageUrls, parsed.data),
-      findSimilar(supabase, parsed.data, embedding, incident.id),
-      findTutorials(supabase, embedding, parsed.data.title),
-    ]);
-    const [suggestion, tutorialHint] = await Promise.all([
-      suggestFromSimilar(parsed.data, similar),
-      suggestFromTutorials(parsed.data, tutorials),
+      triageIncident(parsed.data, { similar, tutorials }),
     ]);
 
     const blocks = [
-      tutorialHint &&
-        `📘 Possível dúvida de uso / processo (não parece um defeito):\n${tutorialHint}`,
-      suggestion && `💡 Sugestão (solicitações parecidas):\n${suggestion}`,
+      triage,
       imageAnalysis && `🖼️ Análise das imagens:\n${imageAnalysis}`,
     ].filter(Boolean);
 
     // Campos calculados no servidor — gravados via service role para não
     // esbarrar nas restrições de RLS de atualização do solicitante.
-    const update: { embedding?: string; ai_analysis?: string } = {};
+    const update: {
+      embedding?: string;
+      ai_analysis?: string;
+      ai_suggested_refs?: number[];
+    } = {};
     if (embedding) update.embedding = `[${embedding.join(",")}]`;
     if (blocks.length) update.ai_analysis = blocks.join("\n\n");
+    // Refs que embasaram a triagem — usadas pelo aprendizado por feedback.
+    const refs = similar.filter((s) => s.resolution).map((s) => s.ref);
+    if (triage && refs.length) update.ai_suggested_refs = refs;
     if (Object.keys(update).length > 0) {
       await createAdminClient()
         .from("incidents")
@@ -198,80 +195,6 @@ export async function createIncidentAction(
 
   revalidatePath(basePath);
   redirect(`${basePath}/${incident.id}`);
-}
-
-/**
- * Encontra chamados resolvidos parecidos. Usa **busca semântica** (pgvector via
- * RPC `match_incidents`) quando há embedding; cai para **full-text** (português)
- * caso contrário ou se a busca vetorial não retornar nada.
- */
-async function findSimilar(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  current: { title: string; description: string },
-  embedding: number[] | null,
-  excludeId: string,
-): Promise<SimilarIncident[]> {
-  if (embedding) {
-    const { data, error } = await supabase.rpc("match_incidents", {
-      query_embedding: `[${embedding.join(",")}]`,
-      match_count: 5,
-      similarity_threshold: 0.3,
-      p_exclude_id: excludeId,
-    });
-    if (!error && data && data.length > 0) {
-      return data.map((d) => ({
-        ref: d.ref,
-        title: d.title,
-        resolution: d.resolution,
-      }));
-    }
-  }
-  return findSimilarResolvedFTS(supabase, current.title);
-}
-
-/**
- * Encontra tutoriais relevantes para a solicitação (busca semântica via RPC
- * `match_tutorials`; cai para full-text). Alimenta a detecção de "dúvida de uso".
- */
-async function findTutorials(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  embedding: number[] | null,
-  title: string,
-): Promise<TutorialMatch[]> {
-  if (embedding) {
-    const { data, error } = await supabase.rpc("match_tutorials", {
-      query_embedding: `[${embedding.join(",")}]`,
-      match_count: 4,
-      similarity_threshold: 0.35,
-    });
-    if (!error && data && data.length > 0) {
-      return data.map((d) => ({
-        title: d.title,
-        content: d.content,
-        category: d.category,
-      }));
-    }
-  }
-  const { data } = await supabase
-    .from("tutorials")
-    .select("title, content, category")
-    .textSearch("search", title, { type: "websearch", config: "portuguese" })
-    .limit(4);
-  return data ?? [];
-}
-
-/** Fallback: busca full-text (português) por chamados resolvidos parecidos. */
-async function findSimilarResolvedFTS(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  title: string,
-): Promise<SimilarIncident[]> {
-  const { data } = await supabase
-    .from("incidents")
-    .select("ref, title, resolution")
-    .in("status", ["resolved", "closed"])
-    .textSearch("search", title, { type: "websearch", config: "portuguese" })
-    .limit(5);
-  return data ?? [];
 }
 
 /** Dados mínimos das partes de um chamado, para roteamento de notificações. */
@@ -541,4 +464,27 @@ export async function resolveIncidentAction(
 
   revalidateTicket(parsed.data.incidentId);
   return {};
+}
+
+/**
+ * Registra o feedback (👍/👎) da equipe sobre a sugestão de IA do chamado.
+ * Alimenta o aprendizado: soluções repetidamente marcadas como inúteis deixam
+ * de ser sugeridas (ver `unhelpful_refs` em lib/ai/retrieval.ts). Só equipe.
+ */
+export async function rateAiSuggestionAction(formData: FormData) {
+  const profile = await requireProfile();
+  if (!isStaff(profile.role)) return;
+  const id = String(formData.get("incidentId"));
+  const helpful = String(formData.get("helpful")) === "true";
+  if (!id) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("ai_suggestion_feedback")
+    .upsert(
+      { incident_id: id, user_id: profile.id, helpful },
+      { onConflict: "incident_id,user_id" },
+    );
+
+  revalidateTicket(id);
 }

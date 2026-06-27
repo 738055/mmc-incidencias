@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { LogOut, User, Search, Bell, HelpCircle, Settings } from "lucide-react";
+import { LogOut, User, Search, HelpCircle, Settings } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS } from "@/lib/domain";
 import type { Profile } from "@/lib/supabase/types";
+import { MobileNav } from "./mobile-nav";
+import { NotificationBell } from "./notification-bell";
 
 export async function Topbar({ profile }: { profile: Profile }) {
   const initials = (profile.full_name || profile.email)
@@ -21,7 +23,9 @@ export async function Topbar({ profile }: { profile: Profile }) {
 
   return (
     <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-border-strong/50 bg-background/95 px-5 backdrop-blur lg:px-8">
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <MobileNav role={profile.role} />
+
         <Link
           href="/incidencias/nova"
           className="font-label inline-flex h-10 items-center rounded-lg bg-orange-700 px-3 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600 lg:hidden"
@@ -55,16 +59,7 @@ export async function Topbar({ profile }: { profile: Profile }) {
             <Settings className="h-5 w-5" />
           </Link>
         )}
-        <Link
-          href="/notificacoes"
-          title="Notificações"
-          className="relative grid h-10 w-10 place-items-center rounded-full text-foreground transition-colors hover:bg-surface-muted"
-        >
-          <Bell className="h-5 w-5" />
-          {unread > 0 && (
-            <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-status-critical" />
-          )}
-        </Link>
+        <NotificationBell userId={profile.id} initialUnread={unread} />
 
         <Link
           href="/perfil"

@@ -10,6 +10,7 @@ import {
 } from "@/lib/validations";
 import { logAudit } from "@/lib/audit";
 import { sendWelcomeEmail } from "@/lib/email/send";
+import { embedText } from "@/lib/ai";
 import type { UserRole, UserStatus } from "@/lib/supabase/types";
 
 /** Gera uma senha inicial forte (atende à política: minúscula, maiúscula, número). */
@@ -235,6 +236,54 @@ export async function setStatusAction(formData: FormData) {
     action: status === "disabled" ? "user.disable" : "user.enable",
     targetId: id,
   });
+  revalidatePath("/admin");
+}
+
+/**
+ * Reprocessa a base semântica (KB): gera o `embedding` que falta em chamados
+ * concluídos e tutoriais publicados, em lote. Útil após importar dados antigos
+ * ou ligar a IA depois. Só admin; tolerante a falhas (sem IA, é no-op).
+ */
+export async function backfillEmbeddingsAction() {
+  await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: incs } = await admin
+    .from("incidents")
+    .select("id, title, description, resolution")
+    .in("status", ["resolved", "closed", "delivered"])
+    .is("embedding", null)
+    .limit(100);
+  for (const i of incs ?? []) {
+    const text = [i.title, i.description, i.resolution].filter(Boolean).join("\n\n");
+    const emb = await embedText(text);
+    if (emb) {
+      await admin
+        .from("incidents")
+        .update({ embedding: `[${emb.join(",")}]` })
+        .eq("id", i.id);
+    }
+  }
+
+  const { data: tuts } = await admin
+    .from("tutorials")
+    .select("id, title, content, category, transcript")
+    .eq("published", true)
+    .is("embedding", null)
+    .limit(100);
+  for (const t of tuts ?? []) {
+    const text = [t.title, t.category, t.content, t.transcript]
+      .filter(Boolean)
+      .join("\n\n");
+    const emb = await embedText(text);
+    if (emb) {
+      await admin
+        .from("tutorials")
+        .update({ embedding: `[${emb.join(",")}]` })
+        .eq("id", t.id);
+    }
+  }
+
   revalidatePath("/admin");
 }
 

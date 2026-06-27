@@ -8,6 +8,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { updateProfileAction } from "@/app/(app)/admin/actions";
 import { signOutAction } from "@/app/(auth)/actions";
+import { PushToggle } from "@/components/notifications/push-toggle";
 
 export const metadata: Metadata = { title: "Meu perfil" };
 
@@ -51,6 +52,8 @@ export default async function ProfilePage() {
               <Button type="submit">Salvar alterações</Button>
             </div>
           </form>
+
+          <PushToggle />
         </CardContent>
       </Card>
 

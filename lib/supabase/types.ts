@@ -79,6 +79,8 @@ export type Incident = {
   assigned_to: string | null;
   resolution: string | null;
   ai_analysis: string | null;
+  /** Refs dos chamados resolvidos citados na triagem de IA (aprendizado por feedback). */
+  ai_suggested_refs: number[] | null;
   /** Embedding (pgvector) serializado como texto "[...]"; preenchido pela IA. */
   embedding: string | null;
   resolved_at: string | null;
@@ -159,6 +161,25 @@ export type Notification = {
   body: string | null;
   link: string | null;
   read: boolean;
+  created_at: string;
+}
+
+/** Assinatura de Web Push de um dispositivo/navegador. */
+export type PushSubscriptionRow = {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
+}
+
+/** Avaliação (👍/👎) da equipe sobre uma sugestão de IA num chamado. */
+export type AiSuggestionFeedback = {
+  id: string;
+  incident_id: string;
+  user_id: string;
+  helpful: boolean;
   created_at: string;
 }
 
@@ -288,6 +309,8 @@ export interface Database {
       incident_attachments: TableType<IncidentAttachment, AttachmentRels>;
       audit_log: TableType<AuditLog>;
       notifications: TableType<Notification>;
+      push_subscriptions: TableType<PushSubscriptionRow>;
+      ai_suggestion_feedback: TableType<AiSuggestionFeedback>;
       tutorials: TableType<Tutorial, TutorialRels>;
       tutorial_media: TableType<TutorialMedia, TutorialMediaRels>;
     };
@@ -309,6 +332,10 @@ export interface Database {
           similarity_threshold?: number;
         };
         Returns: MatchedTutorial[];
+      };
+      unhelpful_refs: {
+        Args: Record<string, never>;
+        Returns: { ref: number }[];
       };
     };
     Enums: {
