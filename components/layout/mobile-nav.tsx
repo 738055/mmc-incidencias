@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Plus } from "lucide-react";
@@ -60,13 +61,16 @@ export function MobileNav({ role }: { role: UserRole }) {
         <Menu className="h-5 w-5" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-navy-900/60 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
+      {/* Portado para o body: escapa do contexto de empilhamento do header
+          (que tem backdrop-blur) e fica acima dos demais overlays (z-[60]). */}
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-[60] lg:hidden">
+            <div
+              className="absolute inset-0 bg-navy-900/60 backdrop-blur-sm"
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
           <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[82vw] flex-col border-r border-navy-600/40 bg-navy-800 px-5 py-6">
             <div className="mb-6 flex items-center justify-between">
               <Link href="/dashboard" onClick={() => setOpen(false)}>
@@ -114,8 +118,9 @@ export function MobileNav({ role }: { role: UserRole }) {
               </Link>
             </div>
           </aside>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
