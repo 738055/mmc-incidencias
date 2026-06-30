@@ -57,8 +57,7 @@ export async function createSystemAction(formData: FormData) {
   const parsed = systemSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? "",
-    developerEmail: formData.get("developerEmail") ?? "",
-    developerName: formData.get("developerName") ?? "",
+    developerEmails: formData.get("developerEmails") ?? "",
     companyId: formData.get("companyId") ?? "",
   });
   if (!parsed.success) return;
@@ -66,8 +65,7 @@ export async function createSystemAction(formData: FormData) {
   await supabase.from("systems").insert({
     name: parsed.data.name,
     description: parsed.data.description || null,
-    developer_email: parsed.data.developerEmail || null,
-    developer_name: parsed.data.developerName || null,
+    developer_emails: parseEmailList(parsed.data.developerEmails),
     company_id: parsed.data.companyId || null,
   });
   revalidatePath("/sistemas");
@@ -88,8 +86,7 @@ export async function updateSystemAction(formData: FormData) {
   const parsed = systemSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? "",
-    developerEmail: formData.get("developerEmail") ?? "",
-    developerName: formData.get("developerName") ?? "",
+    developerEmails: formData.get("developerEmails") ?? "",
     companyId: formData.get("companyId") ?? "",
   });
   if (!parsed.success) return;
@@ -99,8 +96,7 @@ export async function updateSystemAction(formData: FormData) {
     .update({
       name: parsed.data.name,
       description: parsed.data.description || null,
-      developer_email: parsed.data.developerEmail || null,
-      developer_name: parsed.data.developerName || null,
+      developer_emails: parseEmailList(parsed.data.developerEmails),
       company_id: parsed.data.companyId || null,
     })
     .eq("id", id);

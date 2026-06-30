@@ -60,9 +60,8 @@ export type SystemRecord = {
   id: string;
   name: string;
   description: string | null;
-  /** Desenvolvedor responsável — recebe os chamados deste sistema por e-mail. */
-  developer_email: string | null;
-  developer_name: string | null;
+  /** Desenvolvedores — todos recebem os chamados deste sistema por e-mail. */
+  developer_emails: string[];
   /** Empresa responsável — sugerida ao abrir chamado/melhoria deste sistema. */
   company_id: string | null;
   active: boolean;

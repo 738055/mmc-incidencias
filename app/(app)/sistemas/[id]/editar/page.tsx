@@ -7,7 +7,7 @@ import { requireProfile } from "@/lib/auth";
 import { RestrictedNotice } from "@/components/layout/restricted";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Label, Select } from "@/components/ui/input";
+import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { updateSystemAction } from "@/app/(app)/admin/actions";
 
 export const metadata: Metadata = { title: "Editar sistema" };
@@ -62,26 +62,18 @@ export default async function EditSystemPage({
                 placeholder="Opcional"
               />
             </div>
-            <div>
-              <Label htmlFor="developerName">Desenvolvedor (nome)</Label>
-              <Input
-                id="developerName"
-                name="developerName"
-                defaultValue={system.developer_name ?? ""}
-                placeholder="Opcional"
-              />
-            </div>
-            <div>
-              <Label htmlFor="developerEmail">E-mail do desenvolvedor</Label>
-              <Input
-                id="developerEmail"
-                name="developerEmail"
-                type="email"
-                defaultValue={system.developer_email ?? ""}
-                placeholder="dev@empresa.com"
+            <div className="sm:col-span-2">
+              <Label htmlFor="developerEmails">E-mails dos desenvolvedores</Label>
+              <Textarea
+                id="developerEmails"
+                name="developerEmails"
+                rows={2}
+                defaultValue={system.developer_emails?.join(", ") ?? ""}
+                placeholder="dev1@empresa.com, dev2@empresa.com"
               />
               <p className="mt-1 text-xs text-muted">
-                Recebe os chamados deste sistema por e-mail.
+                Todos recebem os chamados deste sistema por e-mail. Separe por
+                vírgula ou quebra de linha.
               </p>
             </div>
             <div className="sm:col-span-2">

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Label, Select } from "@/components/ui/input";
+import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Th } from "@/components/admin/table";
@@ -64,20 +64,17 @@ export default async function SystemsPage() {
               <Label htmlFor="description">Descrição</Label>
               <Input id="description" name="description" placeholder="Opcional" />
             </div>
-            <div>
-              <Label htmlFor="developerName">Desenvolvedor (nome)</Label>
-              <Input id="developerName" name="developerName" placeholder="Opcional" />
-            </div>
-            <div>
-              <Label htmlFor="developerEmail">E-mail do desenvolvedor</Label>
-              <Input
-                id="developerEmail"
-                name="developerEmail"
-                type="email"
-                placeholder="dev@empresa.com"
+            <div className="sm:col-span-2">
+              <Label htmlFor="developerEmails">E-mails dos desenvolvedores</Label>
+              <Textarea
+                id="developerEmails"
+                name="developerEmails"
+                rows={2}
+                placeholder="dev1@empresa.com, dev2@empresa.com"
               />
               <p className="mt-1 text-xs text-muted">
-                Recebe os chamados deste sistema por e-mail.
+                Todos recebem os chamados deste sistema por e-mail. Separe por
+                vírgula ou quebra de linha.
               </p>
             </div>
             <div className="sm:col-span-2">
@@ -131,13 +128,10 @@ export default async function SystemsPage() {
                     <td className="max-w-xs truncate px-6 py-5 text-muted">
                       {(s.company_id && companyName.get(s.company_id)) || "—"}
                     </td>
-                    <td className="px-6 py-5 text-muted">
-                      {s.developer_email ? (
-                        <span className="block truncate">
-                          {s.developer_name && (
-                            <span className="text-foreground">{s.developer_name}</span>
-                          )}
-                          <span className="block text-xs">{s.developer_email}</span>
+                    <td className="max-w-xs px-6 py-5 text-muted">
+                      {s.developer_emails?.length ? (
+                        <span className="line-clamp-2 break-words text-xs">
+                          {s.developer_emails.join(", ")}
                         </span>
                       ) : (
                         "—"
