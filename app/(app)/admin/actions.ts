@@ -50,6 +50,7 @@ export async function createSystemAction(formData: FormData) {
     description: formData.get("description") ?? "",
     developerEmail: formData.get("developerEmail") ?? "",
     developerName: formData.get("developerName") ?? "",
+    companyId: formData.get("companyId") ?? "",
   });
   if (!parsed.success) return;
   const supabase = await createClient();
@@ -58,6 +59,7 @@ export async function createSystemAction(formData: FormData) {
     description: parsed.data.description || null,
     developer_email: parsed.data.developerEmail || null,
     developer_name: parsed.data.developerName || null,
+    company_id: parsed.data.companyId || null,
   });
   revalidatePath("/sistemas");
 }

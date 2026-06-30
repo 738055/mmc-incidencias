@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
+import { Input, Label, Select } from "@/components/ui/input";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Th } from "@/components/admin/table";
@@ -18,8 +18,12 @@ export default async function SystemsPage() {
   if (profile.role !== "admin") return <RestrictedNotice />;
 
   const supabase = await createClient();
-  const { data: systems } = await supabase.from("systems").select("*").order("name");
+  const [{ data: systems }, { data: companies }] = await Promise.all([
+    supabase.from("systems").select("*").order("name"),
+    supabase.from("companies").select("id, name").eq("active", true).order("name"),
+  ]);
   const total = systems?.length ?? 0;
+  const companyName = new Map((companies ?? []).map((c) => [c.id, c.name]));
 
   return (
     <div className="space-y-7">
@@ -75,6 +79,20 @@ export default async function SystemsPage() {
                 Recebe os chamados deste sistema por e-mail.
               </p>
             </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="companyId">Empresa responsável</Label>
+              <Select id="companyId" name="companyId" defaultValue="">
+                <option value="">Nenhuma</option>
+                {(companies ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+              <p className="mt-1 text-xs text-muted">
+                Sugerida automaticamente ao abrir chamado/melhoria deste sistema.
+              </p>
+            </div>
             <Button type="submit" variant="accent" className="sm:col-span-2 sm:justify-self-start">
               Adicionar
             </Button>
@@ -88,7 +106,7 @@ export default async function SystemsPage() {
             <thead>
               <tr className="border-b border-border bg-surface-muted">
                 <Th>Sistema</Th>
-                <Th>Descrição</Th>
+                <Th>Empresa</Th>
                 <Th>Desenvolvedor</Th>
                 <Th>Status</Th>
                 <Th className="text-right">Ações</Th>
@@ -110,7 +128,7 @@ export default async function SystemsPage() {
                       </div>
                     </td>
                     <td className="max-w-xs truncate px-6 py-5 text-muted">
-                      {s.description || "—"}
+                      {(s.company_id && companyName.get(s.company_id)) || "—"}
                     </td>
                     <td className="px-6 py-5 text-muted">
                       {s.developer_email ? (

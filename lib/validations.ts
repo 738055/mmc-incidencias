@@ -123,6 +123,7 @@ export const systemSchema = z.object({
     .optional()
     .or(z.literal("")),
   developerName: z.string().max(120).optional().or(z.literal("")),
+  companyId: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

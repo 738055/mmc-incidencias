@@ -12,7 +12,7 @@ export default async function NewIncidentPage() {
   const supabase = await createClient();
 
   const [{ data: systems }, { data: companies }] = await Promise.all([
-    supabase.from("systems").select("id, name").eq("active", true).order("name"),
+    supabase.from("systems").select("id, name, company_id").eq("active", true).order("name"),
     supabase.from("companies").select("id, name").eq("active", true).order("name"),
   ]);
 

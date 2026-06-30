@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import {
@@ -15,6 +15,7 @@ import { CATEGORIES, PRIORITY_LABELS, PRIORITY_ORDER } from "@/lib/domain";
 import type { TicketKind } from "@/lib/supabase/types";
 
 type Option = { id: string; name: string };
+type SystemOption = Option & { company_id: string | null };
 
 function SubmitButton({ kind }: { kind: TicketKind }) {
   const { pending } = useFormStatus();
@@ -34,7 +35,7 @@ export function NewTicketForm({
 }: {
   kind?: TicketKind;
   userId: string;
-  systems: Option[];
+  systems: SystemOption[];
   companies: Option[];
 }) {
   const isImprovement = kind === "improvement";
@@ -42,6 +43,14 @@ export function NewTicketForm({
     createIncidentAction,
     {},
   );
+  // Empresa controlada: selecionar o sistema preenche a empresa responsável
+  // (ainda editável manualmente).
+  const [companyId, setCompanyId] = useState("");
+
+  function onSystemChange(systemId: string) {
+    const sys = systems.find((s) => s.id === systemId);
+    setCompanyId(sys?.company_id ?? "");
+  }
 
   return (
     <form action={formAction}>
@@ -106,7 +115,12 @@ export function NewTicketForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="systemId">Sistema</Label>
-              <Select id="systemId" name="systemId" defaultValue="">
+              <Select
+                id="systemId"
+                name="systemId"
+                defaultValue=""
+                onChange={(e) => onSystemChange(e.target.value)}
+              >
                 <option value="">Selecione...</option>
                 {systems.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -144,7 +158,12 @@ export function NewTicketForm({
               <Label htmlFor="companyId">
                 {isImprovement ? "Empresa de desenvolvimento" : "Empresa parceira"}
               </Label>
-              <Select id="companyId" name="companyId" defaultValue="">
+              <Select
+                id="companyId"
+                name="companyId"
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+              >
                 <option value="">
                   {isImprovement ? "Nenhuma (interno)" : "Nenhuma (suporte interno)"}
                 </option>
