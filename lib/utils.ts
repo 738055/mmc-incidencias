@@ -16,6 +16,22 @@ export function formatDateTime(value: string | Date | null | undefined) {
   }).format(d);
 }
 
+/** Duração legível em pt-BR entre dois instantes (ex.: "12d 4h", "3h", "<1h"). */
+export function formatDuration(
+  fromIso: string | Date,
+  toIso: string | Date = new Date(),
+) {
+  const from = typeof fromIso === "string" ? new Date(fromIso) : fromIso;
+  const to = typeof toIso === "string" ? new Date(toIso) : toIso;
+  const ms = Math.max(0, to.getTime() - from.getTime());
+  const days = Math.floor(ms / 86_400_000);
+  const hours = Math.floor((ms % 86_400_000) / 3_600_000);
+  if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  const mins = Math.floor(ms / 60_000);
+  return mins > 0 ? `${mins}min` : "<1min";
+}
+
 /** Tempo relativo simples em pt-BR (ex.: "há 3 horas"). */
 export function timeAgo(value: string | Date) {
   const d = typeof value === "string" ? new Date(value) : value;

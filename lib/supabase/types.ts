@@ -3,7 +3,7 @@
  * Mantido manualmente; pode ser regenerado com `supabase gen types typescript`.
  */
 
-export type UserRole = "requester" | "technician" | "admin";
+export type UserRole = "requester" | "technician" | "admin" | "partner";
 export type UserStatus = "pending" | "active" | "disabled";
 export type TicketKind = "incident" | "improvement";
 export type IncidentStatus =
@@ -30,6 +30,8 @@ export type Profile = {
   must_change_password: boolean;
   last_login_at: string | null;
   avatar_url: string | null;
+  /** Empresa parceira vinculada (apenas para o papel 'partner'). */
+  company_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +60,9 @@ export type SystemRecord = {
   id: string;
   name: string;
   description: string | null;
+  /** Desenvolvedor responsável — recebe os chamados deste sistema por e-mail. */
+  developer_email: string | null;
+  developer_name: string | null;
   active: boolean;
   created_at: string;
 }
@@ -86,6 +91,15 @@ export type Incident = {
   resolved_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Uma entrada do histórico de status (etapa em que o chamado entrou e quando). */
+export type IncidentStatusHistory = {
+  id: string;
+  incident_id: string;
+  status: IncidentStatus;
+  changed_by: string | null;
+  created_at: string;
 }
 
 export type IncidentComment = {
@@ -308,6 +322,7 @@ export interface Database {
       systems: TableType<SystemRecord>;
       incidents: TableType<Incident, IncidentRels>;
       incident_comments: TableType<IncidentComment, CommentRels>;
+      incident_status_history: TableType<IncidentStatusHistory>;
       incident_attachments: TableType<IncidentAttachment, AttachmentRels>;
       audit_log: TableType<AuditLog>;
       notifications: TableType<Notification>;

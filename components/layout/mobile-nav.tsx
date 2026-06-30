@@ -9,7 +9,7 @@ import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/supabase/types";
 import { isStaff } from "@/lib/domain";
-import { baseNav, adminNav, type NavItem } from "./nav-items";
+import { navFor, adminNav, type NavItem } from "./nav-items";
 
 /**
  * Navegação mobile/tablet (abaixo de `lg`): botão hambúrguer no topbar que abre
@@ -92,7 +92,7 @@ export function MobileNav({ role }: { role: UserRole }) {
             </div>
 
             <nav className="flex-1 space-y-2 overflow-y-auto">
-              {baseNav.map((item) => (
+              {navFor(role).map((item) => (
                 <NavLink key={item.href} {...item} />
               ))}
 
@@ -108,15 +108,17 @@ export function MobileNav({ role }: { role: UserRole }) {
               )}
             </nav>
 
-            <div className="mt-6 border-t border-navy-500/40 pt-5">
-              <Link
-                href="/incidencias/nova"
-                onClick={() => setOpen(false)}
-                className="font-label flex min-h-12 items-center justify-center gap-3 rounded-lg bg-orange-700 px-4 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600"
-              >
-                <Plus className="h-5 w-5" /> Novo chamado
-              </Link>
-            </div>
+            {role !== "partner" && (
+              <div className="mt-6 border-t border-navy-500/40 pt-5">
+                <Link
+                  href="/incidencias/nova"
+                  onClick={() => setOpen(false)}
+                  className="font-label flex min-h-12 items-center justify-center gap-3 rounded-lg bg-orange-700 px-4 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600"
+                >
+                  <Plus className="h-5 w-5" /> Novo chamado
+                </Link>
+              </div>
+            )}
           </aside>
           </div>,
           document.body,

@@ -59,6 +59,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   requester: "Solicitante",
   technician: "Técnico",
   admin: "Administrador",
+  partner: "Desenvolvedor parceiro",
 };
 
 export const USER_STATUS_LABELS: Record<UserStatus, string> = {
@@ -151,3 +152,23 @@ export const CATEGORIES = [
 export function isStaff(role: UserRole | undefined | null) {
   return role === "technician" || role === "admin";
 }
+
+/** Quem pode mover cards no Kanban: equipe interna OU parceiro (este último
+ *  limitado às melhorias da própria empresa — escopo garantido pela RLS). */
+export function canMoveCard(role: UserRole | undefined | null) {
+  return isStaff(role) || role === "partner";
+}
+
+/** Uma melhoria "em desenvolvimento" que volta para uma etapa anterior é uma
+ *  PAUSA (ultrapassada por algo mais urgente) — evento que a diretoria precisa
+ *  ver justificado. Avançar (entregue) ou recusar não é pausa. */
+export function isPauseTransition(from: IncidentStatus, to: IncidentStatus) {
+  return (
+    from === "in_development" &&
+    (["approved", "in_analysis", "requested"] as IncidentStatus[]).includes(to)
+  );
+}
+
+/** Ações de reprioritização registradas em audit_log (lidas pela diretoria). */
+export const PRIORITY_CHANGE_ACTION = "incident.priority_change";
+export const STATUS_PAUSE_ACTION = "incident.status_pause";

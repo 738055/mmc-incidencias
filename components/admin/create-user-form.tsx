@@ -33,12 +33,17 @@ function SubmitButton() {
   );
 }
 
-export function CreateUserForm() {
+export function CreateUserForm({
+  companies,
+}: {
+  companies: { id: string; name: string }[];
+}) {
   const [state, formAction] = useActionState<CreateUserState, FormData>(
     createUserAction,
     {},
   );
   const [copied, setCopied] = useState(false);
+  const [role, setRole] = useState("requester");
 
   async function copy(text: string) {
     await navigator.clipboard.writeText(text);
@@ -62,14 +67,37 @@ export function CreateUserForm() {
         </div>
         <div>
           <Label htmlFor="role">Papel</Label>
-          <Select id="role" name="role" defaultValue="requester">
-            {(["requester", "technician", "admin"] as const).map((r) => (
+          <Select
+            id="role"
+            name="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            {(["requester", "technician", "admin", "partner"] as const).map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}
               </option>
             ))}
           </Select>
         </div>
+        {role === "partner" && (
+          <div className="sm:col-span-4">
+            <Label htmlFor="companyId">Empresa do desenvolvedor</Label>
+            <Select id="companyId" name="companyId" defaultValue="">
+              <option value="" disabled>
+                Selecione a empresa…
+              </option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-xs text-muted">
+              O parceiro só verá e moverá as melhorias desta empresa.
+            </p>
+          </div>
+        )}
         <SubmitButton />
       </form>
 

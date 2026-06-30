@@ -7,20 +7,26 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import {
   isStaff,
+  canMoveCard,
   ALL_STATUSES,
   STATUS_LABELS,
-  PRIORITY_LABELS,
   KIND_LABELS,
   initialStatusFor,
   doneStatusFor,
+  isPauseTransition,
+  PRIORITY_CHANGE_ACTION,
+  STATUS_PAUSE_ACTION,
 } from "@/lib/domain";
 import type { IncidentStatus, TicketKind } from "@/lib/supabase/types";
 import {
   commentSchema,
   incidentSchema,
   resolveSchema,
+  priorityChangeSchema,
+  triageSchema,
 } from "@/lib/validations";
-import { sendIncidentEmail } from "@/lib/email/send";
+import { logAudit } from "@/lib/audit";
+import { notifyDeveloper } from "@/lib/email/notify-developer";
 import { analyzeIncidentImages, triageIncident, embedText } from "@/lib/ai";
 import { retrieveContext } from "@/lib/ai/retrieval";
 import { notify } from "@/lib/notifications";
@@ -152,35 +158,35 @@ export async function createIncidentAction(
         await admin.from("incidents").update(update).eq("id", incident.id);
       }
 
-      // E-mail para a empresa parceira, se direcionado.
-      if (parsedData.companyId) {
-        const { data: company } = await admin
-          .from("companies")
-          .select("name, contact_emails")
-          .eq("id", parsedData.companyId)
-          .single();
-        const { data: system } = parsedData.systemId
-          ? await admin
-              .from("systems")
-              .select("name")
-              .eq("id", parsedData.systemId)
-              .single()
-          : { data: null };
+      // TRIAGEM: avisa os administradores (in-app + e-mail) para analisarem e
+      // aceitarem/recusarem. O desenvolvedor do sistema só é acionado DEPOIS do
+      // aceite (ver triageTicketAction → notifyDeveloper). Inclui possível
+      // duplicata apontada pela IA, para o admin decidir.
+      const { data: admins } = await admin
+        .from("profiles")
+        .select("id, email, full_name")
+        .eq("role", "admin")
+        .eq("status", "active");
 
-        if (company && company.contact_emails?.length) {
-          await sendIncidentEmail(company.contact_emails, {
+      const dup = similar[0];
+      const dupNote = dup ? ` Possível duplicata: #${dup.ref} — ${dup.title}.` : "";
+      const kindLabel = KIND_LABELS[kind];
+      const link = `${basePath}/${incident.id}`;
+      for (const adm of admins ?? []) {
+        await notify({
+          userId: adm.id,
+          incidentId: incident.id,
+          type: "assigned",
+          title: `Nova ${kindLabel} para análise: #${incident.ref}`,
+          body: `${parsedData.title} — aberto por ${profile.full_name || profile.email}.${dupNote} Acesse para aceitar ou recusar.`,
+          link,
+          email: {
+            to: adm.email,
             ref: incident.ref,
-            kindLabel: KIND_LABELS[kind],
-            title: parsedData.title,
-            description: parsedData.description,
-            systemName: system?.name ?? null,
-            priorityLabel: PRIORITY_LABELS[parsedData.priority],
-            requesterName: profile.full_name || profile.email,
-            companyName: company.name,
-            url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${basePath}/${incident.id}`,
-            imageUrls,
-          });
-        }
+            incidentTitle: parsedData.title,
+            actorName: profile.full_name || profile.email,
+          },
+        });
       }
     } catch (err) {
       console.error("[incident] pós-processamento:", err);
@@ -333,12 +339,45 @@ export async function assignToMeAction(formData: FormData) {
 
 export async function updateStatusAction(formData: FormData) {
   const profile = await requireProfile();
-  if (!isStaff(profile.role)) return;
+  // Equipe interna ou parceiro. O parceiro só consegue afetar melhorias da
+  // própria empresa (RLS) e só o campo status (trigger guard_incident_fields).
+  if (!canMoveCard(profile.role)) return;
   const id = String(formData.get("incidentId"));
   const status = String(formData.get("status")) as IncidentStatus;
   if (!ALL_STATUSES.includes(status)) return;
   const supabase = await createClient();
+
+  // Detecta PAUSA (melhoria saindo de "em desenvolvimento" p/ etapa anterior):
+  // exige motivo e registra na trilha para a diretoria ver o porquê do atraso.
+  const reason = String(formData.get("reason") ?? "").trim();
+  const { data: before } = await supabase
+    .from("incidents")
+    .select("status, ref, title, kind")
+    .eq("id", id)
+    .single();
+  const pausing =
+    !!before && before.kind === "improvement" &&
+    isPauseTransition(before.status, status);
+  if (pausing && reason.length < 3) return; // motivo obrigatório na pausa
+
   await supabase.from("incidents").update({ status }).eq("id", id);
+
+  if (pausing && before) {
+    await logAudit({
+      actorId: profile.id,
+      actorEmail: profile.email,
+      action: STATUS_PAUSE_ACTION,
+      targetId: id,
+      details: {
+        ref: before.ref,
+        title: before.title,
+        kind: before.kind,
+        from: before.status,
+        to: status,
+        reason,
+      },
+    });
+  }
 
   try {
     const parties = await loadParties(supabase, id);
@@ -366,6 +405,152 @@ export async function updateStatusAction(formData: FormData) {
   }
 
   revalidateTicket(id);
+}
+
+/**
+ * Repriorização de uma melhoria com MOTIVO obrigatório. Registra de→para na
+ * trilha (audit_log) para a diretoria ver por que algo passou na frente.
+ * Equipe ou parceiro (RLS + guard garantem o escopo por empresa).
+ */
+export async function updatePriorityAction(formData: FormData) {
+  const profile = await requireProfile();
+  if (!canMoveCard(profile.role)) return;
+
+  const parsed = priorityChangeSchema.safeParse({
+    incidentId: formData.get("incidentId"),
+    priority: formData.get("priority"),
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) return;
+
+  const supabase = await createClient();
+  const { data: before } = await supabase
+    .from("incidents")
+    .select("priority, ref, title, kind")
+    .eq("id", parsed.data.incidentId)
+    .single();
+  if (!before || before.priority === parsed.data.priority) return;
+
+  await supabase
+    .from("incidents")
+    .update({ priority: parsed.data.priority })
+    .eq("id", parsed.data.incidentId);
+
+  await logAudit({
+    actorId: profile.id,
+    actorEmail: profile.email,
+    action: PRIORITY_CHANGE_ACTION,
+    targetId: parsed.data.incidentId,
+    details: {
+      ref: before.ref,
+      title: before.title,
+      kind: before.kind,
+      from: before.priority,
+      to: parsed.data.priority,
+      reason: parsed.data.reason,
+    },
+  });
+
+  revalidateTicket(parsed.data.incidentId);
+}
+
+/**
+ * TRIAGEM do admin: aceitar ou recusar um chamado recém-aberto. Só admin.
+ *  • aceitar → melhoria vira "aprovada" / bug vira "em andamento" e o
+ *    DESENVOLVEDOR do sistema é acionado por e-mail (notifyDeveloper).
+ *  • recusar → melhoria "recusada" / bug "fechado", com MOTIVO obrigatório
+ *    (vira comentário e é avisado ao solicitante).
+ * Idempotente: só age enquanto o chamado está no status inicial (aguardando
+ * triagem), evitando e-mail/efeito duplicado.
+ */
+export async function triageTicketAction(
+  _prev: IncidentFormState,
+  formData: FormData,
+): Promise<IncidentFormState> {
+  const profile = await requireProfile();
+  if (profile.role !== "admin") return { error: "Apenas administradores." };
+
+  const parsed = triageSchema.safeParse({
+    incidentId: formData.get("incidentId"),
+    decision: formData.get("decision"),
+    note: formData.get("note") ?? "",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+  const { incidentId, decision } = parsed.data;
+  const note = parsed.data.note?.trim() || "";
+
+  const supabase = await createClient();
+  const { data: inc } = await supabase
+    .from("incidents")
+    .select("ref, title, kind, status, created_by")
+    .eq("id", incidentId)
+    .single();
+  if (!inc) return { error: "Chamado não encontrado." };
+  if (inc.status !== initialStatusFor(inc.kind)) {
+    return { error: "Este chamado já foi triado." };
+  }
+
+  const accepted = decision === "accept";
+  const isImprovement = inc.kind === "improvement";
+  const newStatus: IncidentStatus = accepted
+    ? isImprovement
+      ? "approved"
+      : "in_progress"
+    : isImprovement
+      ? "rejected"
+      : "closed";
+
+  await supabase.from("incidents").update({ status: newStatus }).eq("id", incidentId);
+
+  // Registra a decisão como comentário (aceite: observação opcional; recusa:
+  // motivo obrigatório).
+  if (note) {
+    await supabase.from("incident_comments").insert({
+      incident_id: incidentId,
+      author_id: profile.id,
+      body: accepted ? `Triagem — aceito: ${note}` : `Triagem — recusado: ${note}`,
+    });
+  }
+
+  // Aceite → aciona o desenvolvedor do sistema.
+  if (accepted) {
+    await notifyDeveloper(incidentId, note || undefined);
+  }
+
+  // Notifica o solicitante da decisão.
+  try {
+    if (inc.created_by !== profile.id) {
+      const contact = await loadContact(inc.created_by);
+      const headline = accepted
+        ? `Chamado #${inc.ref} aceito`
+        : `Chamado #${inc.ref} recusado`;
+      await notify({
+        userId: inc.created_by,
+        incidentId,
+        type: "status_change",
+        title: headline,
+        body: accepted
+          ? `Seu chamado "${inc.title}" foi aceito e encaminhado ao desenvolvedor.${note ? ` Observação: ${note}` : ""}`
+          : `Seu chamado "${inc.title}" foi recusado. Motivo: ${note}`,
+        link: ticketPath(inc.kind, incidentId),
+        email: contact
+          ? {
+              to: contact.email,
+              ref: inc.ref,
+              incidentTitle: inc.title,
+              actorName: profile.full_name || profile.email,
+            }
+          : undefined,
+      });
+    }
+  } catch (err) {
+    console.error("[triage] notify:", err);
+  }
+
+  revalidateTicket(incidentId);
+  return {};
 }
 
 export async function resolveIncidentAction(

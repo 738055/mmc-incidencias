@@ -12,9 +12,9 @@ on conflict (id) do update set allowed_email_domain = excluded.allowed_email_dom
 
 -- Empresas parceiras que atendem incidências.
 insert into public.companies (name, slug, contact_emails, active) values
-  ('Onasys',        'onasys',        array['suporte@onasys.com.br'],     true),
-  ('Parceira Dois', 'parceira-dois', array['suporte@parceiradois.com'],  true),
-  ('Parceira Três', 'parceira-tres', array['suporte@parceiratres.com'],  true)
+  ('Onasys',        'Onassis Filho',        array['onassisfilho@onasys.com.br'],     true),
+  ('A4W', 'Alvaro Ojeda', array['alvaro@a4w.com.br'],  true),
+  ('Inovacao e Tecnologia', 'Thomas William', array['inovacao@controladoriaturismo.com'],  true)
 on conflict (slug) do nothing;
 
 -- Catálogo de sistemas (exemplos).

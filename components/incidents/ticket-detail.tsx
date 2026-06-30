@@ -17,13 +17,15 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { isStaff, isDoneStatus } from "@/lib/domain";
+import { isStaff, isDoneStatus, initialStatusFor } from "@/lib/domain";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, PriorityBadge } from "@/components/incidents/badges";
 import { CommentForm } from "@/components/incidents/comment-form";
 import { ResolvePanel } from "@/components/incidents/resolve-panel";
 import { AiFeedback } from "@/components/incidents/ai-feedback";
 import { TicketActions } from "@/components/incidents/ticket-actions";
+import { TriagePanel } from "@/components/incidents/triage-panel";
+import { StageHistory } from "@/components/incidents/stage-history";
 import { TicketLive } from "@/components/incidents/ticket-live";
 import { MediaGrid } from "@/components/media/media-grid";
 import { formatDateTime } from "@/lib/utils";
@@ -59,18 +61,24 @@ export async function TicketDetail({
 
   if (!incident) notFound();
 
-  const [{ data: comments }, { data: attachments }] = await Promise.all([
-    supabase
-      .from("incident_comments")
-      .select("*, author:profiles(full_name, email)")
-      .eq("incident_id", id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("incident_attachments")
-      .select("*")
-      .eq("incident_id", id)
-      .order("created_at"),
-  ]);
+  const [{ data: comments }, { data: attachments }, { data: history }] =
+    await Promise.all([
+      supabase
+        .from("incident_comments")
+        .select("*, author:profiles(full_name, email)")
+        .eq("incident_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("incident_attachments")
+        .select("*")
+        .eq("incident_id", id)
+        .order("created_at"),
+      supabase
+        .from("incident_status_history")
+        .select("*")
+        .eq("incident_id", id)
+        .order("created_at", { ascending: true }),
+    ]);
 
   const signed: Record<string, string> = {};
   if (attachments?.length) {
@@ -104,6 +112,8 @@ export async function TicketDetail({
   const kind: TicketKind = inc.kind ?? expectedKind;
   const isImprovement = kind === "improvement";
   const done = isDoneStatus(inc.status);
+  const awaitingTriage =
+    profile.role === "admin" && inc.status === initialStatusFor(kind);
 
   return (
     <div className="space-y-7">
@@ -141,6 +151,14 @@ export async function TicketDetail({
 
       <div className="grid gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
+          {awaitingTriage && (
+            <Card className="border-l-4 border-l-orange-600">
+              <CardContent className="pt-5">
+                <TriagePanel incidentId={inc.id} />
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardContent className="pt-5">
               <SectionHeader icon={FileText} title="Descrição do problema" />
@@ -318,6 +336,8 @@ export async function TicketDetail({
             </CardContent>
           </Card>
 
+          <StageHistory items={history ?? []} />
+
           {staff && (
             <Card className="order-first">
               <CardContent className="space-y-3 pt-5">
@@ -329,6 +349,7 @@ export async function TicketDetail({
                   incidentId={inc.id}
                   kind={kind}
                   status={inc.status}
+                  priority={inc.priority}
                   assigned={!!inc.assigned_to}
                 />
               </CardContent>

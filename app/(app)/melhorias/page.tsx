@@ -83,9 +83,14 @@ export default async function ImprovementsPage({
             Pedidos para evoluir e aprimorar os sistemas dos stakeholders.
           </p>
         </div>
-        <Button asChild variant="accent">
-          <Link href="/melhorias/nova">Nova melhoria</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/melhorias/quadro">Quadro</Link>
+          </Button>
+          <Button asChild variant="accent">
+            <Link href="/melhorias/nova">Nova melhoria</Link>
+          </Button>
+        </div>
       </div>
 
       <form className="relative max-w-2xl" action="/melhorias">

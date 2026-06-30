@@ -48,12 +48,16 @@ export async function createSystemAction(formData: FormData) {
   const parsed = systemSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? "",
+    developerEmail: formData.get("developerEmail") ?? "",
+    developerName: formData.get("developerName") ?? "",
   });
   if (!parsed.success) return;
   const supabase = await createClient();
   await supabase.from("systems").insert({
     name: parsed.data.name,
     description: parsed.data.description || null,
+    developer_email: parsed.data.developerEmail || null,
+    developer_name: parsed.data.developerName || null,
   });
   revalidatePath("/sistemas");
 }
@@ -134,6 +138,7 @@ export async function createUserAction(
     fullName: formData.get("fullName"),
     email: formData.get("email"),
     role: formData.get("role"),
+    companyId: formData.get("companyId") ?? "",
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
@@ -162,6 +167,9 @@ export async function createUserAction(
       role: parsed.data.role,
       provisioned: "true",
       must_change: "true",
+      ...(parsed.data.role === "partner" && parsed.data.companyId
+        ? { company_id: parsed.data.companyId }
+        : {}),
     },
   });
 

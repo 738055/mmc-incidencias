@@ -31,12 +31,16 @@ export default async function AdminUsersPage() {
   if (profile.role !== "admin") return <RestrictedNotice />;
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: true });
+  const [{ data }, { data: companyRows }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: true }),
+    supabase.from("companies").select("id, name").eq("active", true).order("name"),
+  ]);
 
   const users = (data as Profile[]) ?? [];
+  const companies = companyRows ?? [];
   const pending = users.filter((u) => u.status === "pending");
   const active = users.filter((u) => u.status !== "pending");
 
@@ -78,7 +82,7 @@ export default async function AdminUsersPage() {
           <UserPlus className="h-4 w-4 text-orange-700" /> Adicionar usuário
         </summary>
         <CardContent className="border-t border-border pt-5">
-          <CreateUserForm />
+          <CreateUserForm companies={companies} />
         </CardContent>
       </details>
 
@@ -170,7 +174,7 @@ export default async function AdminUsersPage() {
                           disabled={self}
                           className="h-10 rounded-lg border border-border bg-surface px-3 text-sm shadow-sm disabled:opacity-50"
                         >
-                          {(["requester", "technician", "admin"] as const).map((r) => (
+                          {(["requester", "technician", "admin", "partner"] as const).map((r) => (
                             <option key={r} value={r}>
                               {ROLE_LABELS[r]}
                             </option>

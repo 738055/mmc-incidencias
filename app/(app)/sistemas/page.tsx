@@ -49,7 +49,7 @@ export default async function SystemsPage() {
         <CardContent className="border-t border-border pt-5">
           <form
             action={createSystemAction}
-            className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+            className="grid gap-4 sm:grid-cols-2 sm:items-end"
           >
             <div>
               <Label htmlFor="name">Nome</Label>
@@ -59,7 +59,23 @@ export default async function SystemsPage() {
               <Label htmlFor="description">Descrição</Label>
               <Input id="description" name="description" placeholder="Opcional" />
             </div>
-            <Button type="submit" variant="accent">
+            <div>
+              <Label htmlFor="developerName">Desenvolvedor (nome)</Label>
+              <Input id="developerName" name="developerName" placeholder="Opcional" />
+            </div>
+            <div>
+              <Label htmlFor="developerEmail">E-mail do desenvolvedor</Label>
+              <Input
+                id="developerEmail"
+                name="developerEmail"
+                type="email"
+                placeholder="dev@empresa.com"
+              />
+              <p className="mt-1 text-xs text-muted">
+                Recebe os chamados deste sistema por e-mail.
+              </p>
+            </div>
+            <Button type="submit" variant="accent" className="sm:col-span-2 sm:justify-self-start">
               Adicionar
             </Button>
           </form>
@@ -73,6 +89,7 @@ export default async function SystemsPage() {
               <tr className="border-b border-border bg-surface-muted">
                 <Th>Sistema</Th>
                 <Th>Descrição</Th>
+                <Th>Desenvolvedor</Th>
                 <Th>Status</Th>
                 <Th className="text-right">Ações</Th>
               </tr>
@@ -92,8 +109,20 @@ export default async function SystemsPage() {
                         {s.name}
                       </div>
                     </td>
-                    <td className="max-w-md truncate px-6 py-5 text-muted">
+                    <td className="max-w-xs truncate px-6 py-5 text-muted">
                       {s.description || "—"}
+                    </td>
+                    <td className="px-6 py-5 text-muted">
+                      {s.developer_email ? (
+                        <span className="block truncate">
+                          {s.developer_name && (
+                            <span className="text-foreground">{s.developer_name}</span>
+                          )}
+                          <span className="block text-xs">{s.developer_email}</span>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-6 py-5">
                       <StatusPill active={s.active} />
@@ -111,7 +140,7 @@ export default async function SystemsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-muted">
+                  <td colSpan={5} className="px-6 py-12 text-center text-muted">
                     Nenhum sistema cadastrado.
                   </td>
                 </tr>

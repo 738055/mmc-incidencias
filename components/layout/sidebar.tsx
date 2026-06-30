@@ -7,7 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/supabase/types";
 import { isStaff } from "@/lib/domain";
-import { baseNav, adminNav, type NavItem } from "./nav-items";
+import { navFor, adminNav, type NavItem } from "./nav-items";
 
 export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
@@ -47,7 +47,7 @@ export function Sidebar({ role }: { role: UserRole }) {
       </Link>
 
       <nav className="flex-1 space-y-2">
-        {baseNav.map((item) => (
+        {navFor(role).map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
 
@@ -63,14 +63,16 @@ export function Sidebar({ role }: { role: UserRole }) {
         )}
       </nav>
 
-      <div className="mt-8 border-t border-navy-500/40 pt-5">
-        <Link
-          href="/incidencias/nova"
-          className="font-label flex min-h-12 items-center justify-center gap-3 rounded-lg bg-orange-700 px-4 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600"
-        >
-          <Plus className="h-5 w-5" /> Novo chamado
-        </Link>
-      </div>
+      {role !== "partner" && (
+        <div className="mt-8 border-t border-navy-500/40 pt-5">
+          <Link
+            href="/incidencias/nova"
+            className="font-label flex min-h-12 items-center justify-center gap-3 rounded-lg bg-orange-700 px-4 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-orange-600"
+          >
+            <Plus className="h-5 w-5" /> Novo chamado
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }
