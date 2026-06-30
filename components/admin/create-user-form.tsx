@@ -120,11 +120,16 @@ export function CreateUserForm({
               </>
             ) : (
               <>
-                <MailX className="h-3.5 w-3.5" /> E-mail não enviado (configure o
-                Resend). Repasse a senha abaixo com segurança.
+                <MailX className="h-3.5 w-3.5" /> E-mail não enviado. Repasse a
+                senha abaixo com segurança.
               </>
             )}
           </p>
+          {!state.emailSent && state.emailError && (
+            <p className="mt-1 text-xs text-amber-700">
+              Motivo: {state.emailError}
+            </p>
+          )}
           <div className="mt-3 flex items-center gap-2">
             <code className="flex-1 rounded-md bg-white px-3 py-2 font-mono text-sm text-navy-700 ring-1 ring-inset ring-green-200">
               {state.tempPassword}

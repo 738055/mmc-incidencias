@@ -125,6 +125,7 @@ export type CreateUserState = {
   createdEmail?: string;
   tempPassword?: string;
   emailSent?: boolean;
+  emailError?: string;
 };
 
 /** Cria um usuário já ativo, com senha inicial e troca obrigatória no 1º acesso. */
@@ -201,6 +202,11 @@ export async function createUserAction(
     createdEmail: parsed.data.email,
     tempPassword,
     emailSent: result.ok,
+    emailError: result.ok
+      ? undefined
+      : result.skipped
+        ? "RESEND_API_KEY/EMAIL_FROM ausentes no servidor."
+        : result.error,
   };
 }
 
