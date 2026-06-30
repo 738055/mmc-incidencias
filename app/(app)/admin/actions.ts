@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import {
@@ -26,6 +27,14 @@ function generatePassword(): string {
     .split("")
     .sort(() => Math.random() - 0.5)
     .join("");
+}
+
+/** Extrai e-mails válidos de um texto separado por vírgula/; / quebra de linha. */
+function parseEmailList(raw: string): string[] {
+  return raw
+    .split(/[\n,;]+/)
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
 }
 
 function slugify(name: string) {
@@ -73,6 +82,32 @@ export async function toggleSystemAction(formData: FormData) {
   revalidatePath("/sistemas");
 }
 
+export async function updateSystemAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const parsed = systemSchema.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description") ?? "",
+    developerEmail: formData.get("developerEmail") ?? "",
+    developerName: formData.get("developerName") ?? "",
+    companyId: formData.get("companyId") ?? "",
+  });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  await supabase
+    .from("systems")
+    .update({
+      name: parsed.data.name,
+      description: parsed.data.description || null,
+      developer_email: parsed.data.developerEmail || null,
+      developer_name: parsed.data.developerName || null,
+      company_id: parsed.data.companyId || null,
+    })
+    .eq("id", id);
+  revalidatePath("/sistemas");
+  redirect("/sistemas");
+}
+
 export async function createCompanyAction(formData: FormData) {
   await requireAdmin();
   const parsed = companySchema.safeParse({
@@ -81,10 +116,7 @@ export async function createCompanyAction(formData: FormData) {
   });
   if (!parsed.success) return;
 
-  const emails = parsed.data.contactEmails
-    .split(/[\n,;]+/)
-    .map((e) => e.trim().toLowerCase())
-    .filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+  const emails = parseEmailList(parsed.data.contactEmails);
 
   const supabase = await createClient();
   await supabase.from("companies").insert({
@@ -102,6 +134,27 @@ export async function toggleCompanyAction(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("companies").update({ active: !active }).eq("id", id);
   revalidatePath("/empresas");
+}
+
+export async function updateCompanyAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const parsed = companySchema.safeParse({
+    name: formData.get("name"),
+    contactEmails: formData.get("contactEmails") ?? "",
+  });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  await supabase
+    .from("companies")
+    .update({
+      name: parsed.data.name,
+      slug: slugify(parsed.data.name),
+      contact_emails: parseEmailList(parsed.data.contactEmails),
+    })
+    .eq("id", id);
+  revalidatePath("/empresas");
+  redirect("/empresas");
 }
 
 export async function setRoleAction(formData: FormData) {

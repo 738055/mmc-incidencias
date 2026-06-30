@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Building2, PlusCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -122,13 +123,18 @@ export default async function CompaniesPage() {
                       <StatusPill active={c.active} labels={["Ativa", "Inativa"]} />
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <form action={toggleCompanyAction}>
-                        <input type="hidden" name="id" value={c.id} />
-                        <input type="hidden" name="active" value={String(c.active)} />
-                        <Button type="submit" variant="ghost" size="sm">
-                          {c.active ? "Desativar" : "Ativar"}
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/empresas/${c.id}/editar`}>Editar</Link>
                         </Button>
-                      </form>
+                        <form action={toggleCompanyAction}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input type="hidden" name="active" value={String(c.active)} />
+                          <Button type="submit" variant="ghost" size="sm">
+                            {c.active ? "Desativar" : "Ativar"}
+                          </Button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))
