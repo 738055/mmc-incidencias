@@ -8,6 +8,8 @@ const tabs = [
   { href: "/admin", label: "Usuários" },
   { href: "/sistemas", label: "Sistemas" },
   { href: "/empresas", label: "Empresas parceiras" },
+  { href: "/departamentos", label: "Departamentos" },
+  { href: "/metricas", label: "Métricas" },
 ];
 
 /** Barra de abas da área de Administração (Usuários · Sistemas · Empresas). */

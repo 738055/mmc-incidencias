@@ -12,7 +12,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label, Select } from "@/components/ui/input";
 import { MediaUploader } from "@/components/media/media-uploader";
 import { RichTextField } from "@/components/ui/rich-text";
-import { CATEGORIES, PRIORITY_LABELS, PRIORITY_ORDER } from "@/lib/domain";
+import {
+  CATEGORIES,
+  PRIORITY_LABELS,
+  PRIORITY_ORDER,
+  IMPROVEMENT_TYPES,
+  IMPROVEMENT_TYPE_LABELS,
+} from "@/lib/domain";
 import type { TicketKind } from "@/lib/supabase/types";
 
 type Option = { id: string; name: string };
@@ -88,6 +94,16 @@ export function NewTicketForm({
 
           {isImprovement && (
             <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="improvementType">Tipo</Label>
+                <Select id="improvementType" name="improvementType" defaultValue="improvement">
+                  {IMPROVEMENT_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {IMPROVEMENT_TYPE_LABELS[t]}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <div>
                 <Label htmlFor="stakeholderArea">Stakeholder / área solicitante</Label>
                 <Input

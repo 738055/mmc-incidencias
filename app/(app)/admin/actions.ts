@@ -8,6 +8,8 @@ import {
   companySchema,
   systemSchema,
   systemDeveloperSchema,
+  departmentSchema,
+  manualMetricSchema,
   createUserSchema,
 } from "@/lib/validations";
 import type { SystemDeveloper } from "@/lib/supabase/types";
@@ -169,6 +171,115 @@ export async function updateCompanyAction(formData: FormData) {
     .eq("id", id);
   revalidatePath("/empresas");
   redirect("/empresas");
+}
+
+export async function createDepartmentAction(formData: FormData) {
+  await requireAdmin();
+  const parsed = departmentSchema.safeParse({ name: formData.get("name") });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  await supabase.from("departments").insert({
+    name: parsed.data.name,
+    slug: slugify(parsed.data.name),
+  });
+  revalidatePath("/departamentos");
+}
+
+export async function updateDepartmentAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const parsed = departmentSchema.safeParse({ name: formData.get("name") });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  await supabase
+    .from("departments")
+    .update({ name: parsed.data.name, slug: slugify(parsed.data.name) })
+    .eq("id", id);
+  revalidatePath("/departamentos");
+}
+
+export async function toggleDepartmentAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const active = String(formData.get("active")) === "true";
+  const supabase = await createClient();
+  await supabase.from("departments").update({ active: !active }).eq("id", id);
+  revalidatePath("/departamentos");
+}
+
+/** Vincula (ou desvincula) um usuário a um departamento. */
+export async function setDepartmentAction(formData: FormData) {
+  const actor = await requireAdmin();
+  const id = String(formData.get("id"));
+  const departmentId = String(formData.get("departmentId") || "");
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ department_id: departmentId || null })
+    .eq("id", id);
+  await logAudit({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "user.department_change",
+    targetId: id,
+    details: { departmentId: departmentId || null },
+  });
+  revalidatePath("/admin");
+}
+
+function metricInput(formData: FormData) {
+  return manualMetricSchema.safeParse({
+    label: formData.get("label"),
+    value: formData.get("value"),
+    unit: formData.get("unit") ?? "",
+    period: formData.get("period") ?? "",
+    note: formData.get("note") ?? "",
+  });
+}
+
+export async function createManualMetricAction(formData: FormData) {
+  await requireAdmin();
+  const parsed = metricInput(formData);
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  await supabase.from("manual_metrics").insert({
+    label: parsed.data.label,
+    value: parsed.data.value,
+    unit: parsed.data.unit || null,
+    period: parsed.data.period || null,
+    note: parsed.data.note || null,
+  });
+  revalidatePath("/metricas");
+  revalidatePath("/indicadores");
+}
+
+export async function updateManualMetricAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const parsed = metricInput(formData);
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  await supabase
+    .from("manual_metrics")
+    .update({
+      label: parsed.data.label,
+      value: parsed.data.value,
+      unit: parsed.data.unit || null,
+      period: parsed.data.period || null,
+      note: parsed.data.note || null,
+    })
+    .eq("id", id);
+  revalidatePath("/metricas");
+  revalidatePath("/indicadores");
+}
+
+export async function deleteManualMetricAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const supabase = await createClient();
+  await supabase.from("manual_metrics").delete().eq("id", id);
+  revalidatePath("/metricas");
+  revalidatePath("/indicadores");
 }
 
 export async function setRoleAction(formData: FormData) {

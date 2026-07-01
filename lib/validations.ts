@@ -72,6 +72,10 @@ export const incidentSchema = z.object({
   category: z.string().max(80).optional().or(z.literal("")),
   stakeholderArea: z.string().max(120).optional().or(z.literal("")),
   benefit: z.string().max(8000).optional().or(z.literal("")), // HTML rico
+  improvementType: z
+    .enum(["improvement", "automation", "project"])
+    .optional()
+    .or(z.literal("")),
   priority: z.enum(["low", "medium", "high", "critical"]),
 });
 
@@ -110,6 +114,18 @@ export const triageSchema = z
 export const companySchema = z.object({
   name: z.string().min(2).max(120),
   contactEmails: z.string().max(1000), // lista separada por vírgula/linha
+});
+
+export const departmentSchema = z.object({
+  name: z.string().min(2, "Nome muito curto").max(80),
+});
+
+export const manualMetricSchema = z.object({
+  label: z.string().min(2, "Nome muito curto").max(120),
+  value: z.coerce.number().finite(),
+  unit: z.string().max(12).optional().or(z.literal("")),
+  period: z.string().max(40).optional().or(z.literal("")),
+  note: z.string().max(500).optional().or(z.literal("")),
 });
 
 export const systemSchema = z.object({

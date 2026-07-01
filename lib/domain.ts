@@ -81,6 +81,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "user.enable": "Conta ativada",
   "user.disable": "Conta desativada",
   "user.role_change": "Papel alterado",
+  "user.department_change": "Departamento alterado",
   "password.change": "Senha alterada",
   "password.reset_request": "Redefinição de senha solicitada",
 };
@@ -129,6 +130,37 @@ export function doneStatusFor(kind: TicketKind): IncidentStatus {
 /** Status considerados "concluídos" (não exigem mais ação). */
 export function isDoneStatus(status: IncidentStatus): boolean {
   return ["resolved", "closed", "delivered", "rejected"].includes(status);
+}
+
+/** Subtipos de melhoria (habilitam indicadores separados). */
+export const IMPROVEMENT_TYPES = ["improvement", "automation", "project"] as const;
+export type ImprovementType = (typeof IMPROVEMENT_TYPES)[number];
+export const IMPROVEMENT_TYPE_LABELS: Record<ImprovementType, string> = {
+  improvement: "Melhoria",
+  automation: "Automação",
+  project: "Projeto",
+};
+
+/**
+ * SLA (dias) por prioridade — prazo alvo de resolução. Valores padrão; ajuste
+ * conforme a política da equipe. Usado para marcar demandas "atrasadas".
+ */
+export const SLA_DAYS: Record<IncidentPriority, number> = {
+  critical: 2,
+  high: 5,
+  medium: 10,
+  low: 20,
+};
+
+/** Demanda aberta que ultrapassou o SLA da sua prioridade. */
+export function isOverdue(
+  status: IncidentStatus,
+  priority: IncidentPriority,
+  createdAt: string,
+): boolean {
+  if (isDoneStatus(status)) return false;
+  const ms = SLA_DAYS[priority] * 86_400_000;
+  return Date.now() - new Date(createdAt).getTime() > ms;
 }
 
 export const PRIORITY_ORDER: IncidentPriority[] = [

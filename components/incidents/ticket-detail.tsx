@@ -17,7 +17,13 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { isStaff, isDoneStatus, initialStatusFor } from "@/lib/domain";
+import {
+  isStaff,
+  isDoneStatus,
+  initialStatusFor,
+  IMPROVEMENT_TYPE_LABELS,
+  type ImprovementType,
+} from "@/lib/domain";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, PriorityBadge } from "@/components/incidents/badges";
 import { CommentForm } from "@/components/incidents/comment-form";
@@ -53,7 +59,7 @@ export async function TicketDetail({
   const { data: incident } = await supabase
     .from("incidents")
     .select(
-      `*, systems(name), companies(name),
+      `*, systems(name), companies(name), departments(name),
        creator:profiles!incidents_created_by_fkey(full_name, email),
        assignee:profiles!incidents_assigned_to_fkey(full_name, email)`,
     )
@@ -342,8 +348,22 @@ export async function TicketDetail({
                 value={formatDateTime(inc.created_at)}
               />
               <Detail icon={Server} label="Sistema" value={inc.systems?.name} />
+              <Detail
+                icon={Building2}
+                label="Departamento"
+                value={inc.departments?.name}
+              />
               {isImprovement && (
                 <>
+                  <Detail
+                    icon={Target}
+                    label="Tipo"
+                    value={
+                      IMPROVEMENT_TYPE_LABELS[
+                        (inc.improvement_type ?? "improvement") as ImprovementType
+                      ]
+                    }
+                  />
                   <Detail
                     icon={Target}
                     label="Stakeholder / área"

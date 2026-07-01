@@ -139,6 +139,27 @@ textarea {
   color: var(--color-foreground);
 }
 
+/* Impressão / Salvar como PDF — mostra só o conteúdo, sem a navegação */
+@media print {
+  aside,
+  header,
+  .no-print,
+  .fixed {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .rounded-lg,
+  .rounded-xl {
+    box-shadow: none !important;
+  }
+}
+
 /* HTML renderizado (restaura o que o preflight do Tailwind remove) */
 .rich-html {
   font-size: 0.875rem;

@@ -21,6 +21,26 @@ export type IncidentStatus =
   | "rejected";
 export type IncidentPriority = "low" | "medium" | "high" | "critical";
 
+export type Department = {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  created_at: string;
+}
+
+export type ManualMetric = {
+  id: string;
+  label: string;
+  value: number;
+  unit: string | null;
+  period: string | null;
+  note: string | null;
+  sort: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export type Profile = {
   id: string;
   full_name: string;
@@ -32,6 +52,8 @@ export type Profile = {
   avatar_url: string | null;
   /** Empresa parceira vinculada (apenas para o papel 'partner'). */
   company_id: string | null;
+  /** Departamento (setor interno) do usuário. */
+  department_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +100,10 @@ export type Incident = {
   description: string;
   system_id: string | null;
   company_id: string | null;
+  /** Departamento de quem abriu (snapshot no momento da criação). */
+  department_id: string | null;
+  /** Subtipo de melhoria: improvement | automation | project (null p/ bugs). */
+  improvement_type: string | null;
   category: string | null;
   stakeholder_area: string | null;
   benefit: string | null;
@@ -321,6 +347,8 @@ export interface Database {
   public: {
     Tables: {
       profiles: TableType<Profile>;
+      departments: TableType<Department>;
+      manual_metrics: TableType<ManualMetric>;
       companies: TableType<Company>;
       systems: TableType<SystemRecord>;
       incidents: TableType<Incident, IncidentRels>;

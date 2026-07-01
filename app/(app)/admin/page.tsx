@@ -16,6 +16,7 @@ import { Th } from "@/components/admin/table";
 import { CreateUserForm } from "@/components/admin/create-user-form";
 import {
   setRoleAction,
+  setDepartmentAction,
   approveUserAction,
   setStatusAction,
   backfillEmbeddingsAction,
@@ -31,16 +32,23 @@ export default async function AdminUsersPage() {
   if (profile.role !== "admin") return <RestrictedNotice />;
 
   const supabase = await createClient();
-  const [{ data }, { data: companyRows }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: true }),
-    supabase.from("companies").select("id, name").eq("active", true).order("name"),
-  ]);
+  const [{ data }, { data: companyRows }, { data: departmentRows }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: true }),
+      supabase.from("companies").select("id, name").eq("active", true).order("name"),
+      supabase
+        .from("departments")
+        .select("id, name")
+        .eq("active", true)
+        .order("name"),
+    ]);
 
   const users = (data as Profile[]) ?? [];
   const companies = companyRows ?? [];
+  const departments = departmentRows ?? [];
   const pending = users.filter((u) => u.status === "pending");
   const active = users.filter((u) => u.status !== "pending");
 
@@ -136,6 +144,7 @@ export default async function AdminUsersPage() {
               <tr className="border-b border-border bg-surface-muted">
                 <Th>Usuário</Th>
                 <Th>Papel</Th>
+                <Th>Departamento</Th>
                 <Th>Status</Th>
                 <Th>Último acesso</Th>
                 <Th className="text-right">Ações</Th>
@@ -181,6 +190,26 @@ export default async function AdminUsersPage() {
                           ))}
                         </select>
                         <Button type="submit" size="sm" variant="outline" disabled={self}>
+                          Salvar
+                        </Button>
+                      </form>
+                    </td>
+                    <td className="px-6 py-5">
+                      <form action={setDepartmentAction} className="flex items-center gap-2">
+                        <input type="hidden" name="id" value={u.id} />
+                        <select
+                          name="departmentId"
+                          defaultValue={u.department_id ?? ""}
+                          className="h-10 rounded-lg border border-border bg-surface px-3 text-sm shadow-sm"
+                        >
+                          <option value="">—</option>
+                          {departments.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                            </option>
+                          ))}
+                        </select>
+                        <Button type="submit" size="sm" variant="outline">
                           Salvar
                         </Button>
                       </form>

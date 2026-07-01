@@ -10,6 +10,7 @@ import {
   Building2,
   KanbanSquare,
   TrendingUp,
+  BarChart3,
 } from "lucide-react";
 import type { UserRole } from "@/lib/supabase/types";
 
@@ -27,6 +28,7 @@ export const baseNav: NavItem[] = [
 ];
 
 export const adminNav: NavItem[] = [
+  { href: "/indicadores", label: "Indicadores", icon: BarChart3 },
   { href: "/repriorizacoes", label: "Repriorizações", icon: TrendingUp },
   { href: "/sistemas", label: "Sistemas", icon: Server },
   { href: "/empresas", label: "Empresas parceiras", icon: Building2 },

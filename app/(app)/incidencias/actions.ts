@@ -59,6 +59,7 @@ export async function createIncidentAction(
     category: formData.get("category") ?? "",
     stakeholderArea: formData.get("stakeholderArea") ?? "",
     benefit: formData.get("benefit") ?? "",
+    improvementType: formData.get("improvementType") ?? "",
     priority: formData.get("priority"),
   });
   if (!parsed.success) {
@@ -94,6 +95,11 @@ export async function createIncidentAction(
       description: descriptionHtml,
       system_id: parsed.data.systemId || null,
       company_id: parsed.data.companyId || null,
+      department_id: profile.department_id ?? null,
+      improvement_type:
+        kind === "improvement"
+          ? parsed.data.improvementType || "improvement"
+          : null,
       category: parsed.data.category || null,
       stakeholder_area: parsed.data.stakeholderArea || null,
       benefit: htmlToText(benefitHtml) ? benefitHtml : null,
