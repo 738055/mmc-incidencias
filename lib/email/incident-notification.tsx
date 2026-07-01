@@ -152,7 +152,14 @@ export function IncidentNotificationEmail({
                 <Text style={{ color: orange, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, margin: "0 0 6px" }}>
                   Avaliação da triagem (admin)
                 </Text>
-                <Text style={{ ...bodyText, fontSize: 14 }}>{triageNote}</Text>
+                {isHtml(triageNote) ? (
+                  <div
+                    style={{ color: "#0b1524", fontSize: 14, lineHeight: "22px" }}
+                    dangerouslySetInnerHTML={{ __html: triageNote as string }}
+                  />
+                ) : (
+                  <Text style={{ ...bodyText, fontSize: 14 }}>{triageNote}</Text>
+                )}
               </Section>
             )}
 

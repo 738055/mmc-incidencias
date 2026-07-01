@@ -493,7 +493,11 @@ export async function triageTicketAction(
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
   }
   const { incidentId, decision } = parsed.data;
-  const note = parsed.data.note?.trim() || "";
+  // Nota vem do editor rico: sanitiza o HTML e extrai o texto puro (para
+  // notificações/e-mail do solicitante, que não renderizam HTML).
+  const noteHtml = parsed.data.note ? sanitizeRichText(parsed.data.note) : "";
+  const noteText = htmlToText(noteHtml);
+  const hasNote = noteText.length > 0;
 
   const supabase = await createClient();
   const { data: inc } = await supabase
@@ -507,6 +511,9 @@ export async function triageTicketAction(
   }
 
   const accepted = decision === "accept";
+  if (!accepted && !hasNote) {
+    return { error: "Informe o motivo da recusa." };
+  }
   const isImprovement = inc.kind === "improvement";
   const newStatus: IncidentStatus = accepted
     ? isImprovement
@@ -519,18 +526,19 @@ export async function triageTicketAction(
   await supabase.from("incidents").update({ status: newStatus }).eq("id", incidentId);
 
   // Registra a decisão como comentário (aceite: observação opcional; recusa:
-  // motivo obrigatório).
-  if (note) {
+  // motivo obrigatório). Corpo em HTML: rótulo + a especificação/motivo.
+  if (hasNote) {
+    const label = accepted ? "Triagem — aceito" : "Triagem — recusado";
     await supabase.from("incident_comments").insert({
       incident_id: incidentId,
       author_id: profile.id,
-      body: accepted ? `Triagem — aceito: ${note}` : `Triagem — recusado: ${note}`,
+      body: `<p><strong>${label}</strong></p>${noteHtml}`,
     });
   }
 
-  // Aceite → aciona o desenvolvedor do sistema.
+  // Aceite → aciona o desenvolvedor do sistema (com a especificação em HTML).
   if (accepted) {
-    await notifyDeveloper(incidentId, note || undefined);
+    await notifyDeveloper(incidentId, hasNote ? noteHtml : undefined);
   }
 
   // Notifica o solicitante da decisão.
@@ -546,8 +554,8 @@ export async function triageTicketAction(
         type: "status_change",
         title: headline,
         body: accepted
-          ? `Seu chamado "${inc.title}" foi aceito e encaminhado ao desenvolvedor.${note ? ` Observação: ${note}` : ""}`
-          : `Seu chamado "${inc.title}" foi recusado. Motivo: ${note}`,
+          ? `Seu chamado "${inc.title}" foi aceito e encaminhado ao desenvolvedor.${noteText ? ` Observação: ${noteText}` : ""}`
+          : `Seu chamado "${inc.title}" foi recusado. Motivo: ${noteText}`,
         link: ticketPath(inc.kind, incidentId),
         email: contact
           ? {

@@ -4,26 +4,21 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle, ShieldQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
+import { RichTextField } from "@/components/ui/rich-text";
 import { triageTicketAction } from "@/app/(app)/incidencias/actions";
 import type { TicketKind } from "@/lib/supabase/types";
 
-/** Modelo de especificação para completar a solicitação antes de enviar ao dev. */
-const SPEC_TEMPLATE = `## Objetivo
-<o que se quer alcançar>
+/** Modelo de especificação (HTML) para completar a solicitação antes do dev. */
+const SPEC_TEMPLATE = `<h2>Objetivo</h2><p>(o que se quer alcançar)</p><h2>Situação atual</h2><p>(como funciona hoje)</p><h2>Comportamento esperado</h2><p>(como deve ficar)</p><h2>Critérios de aceite</h2><ul><li></li><li></li></ul><h2>Escopo / notas técnicas</h2><p>(observações para o dev)</p>`;
 
-## Situação atual
-<como funciona hoje>
-
-## Comportamento esperado
-<como deve ficar>
-
-## Critérios de aceite
-- [ ]
-- [ ]
-
-## Escopo / notas técnicas
-<observações para o dev>`;
+/** Texto puro (sem tags), para comparar/validar no cliente. */
+function stripHtml(s: string): string {
+  return s
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 /**
  * Portão de triagem do admin: aceitar (→ aciona o desenvolvedor) ou recusar
@@ -47,7 +42,8 @@ export function TriagePanel({
   function submit(decision: "accept" | "reject") {
     setError(null);
     if (decision === "reject") {
-      if (note.trim().length < 3 || note.trim() === SPEC_TEMPLATE.trim()) {
+      const text = stripHtml(note);
+      if (text.length < 3 || text === stripHtml(SPEC_TEMPLATE)) {
         setError("Para recusar, limpe o modelo e informe o motivo (mín. 3 caracteres).");
         return;
       }
@@ -89,12 +85,9 @@ export function TriagePanel({
           </>
         )}
       </p>
-      <Textarea
+      <RichTextField
         value={note}
-        onChange={(e) => setNote(e.target.value)}
-        rows={isImprovement ? 14 : 3}
-        disabled={pending}
-        className={isImprovement ? "font-mono text-sm" : undefined}
+        onValueChange={setNote}
         placeholder="Observação/refinamento (opcional no aceite) — motivo é obrigatório na recusa"
       />
       {error && <p className="text-sm text-red-700">{error}</p>}

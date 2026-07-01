@@ -100,7 +100,7 @@ export const triageSchema = z
     decision: z.enum(["accept", "reject"]),
     // Observação no aceite (opcional, refina o pedido) OU motivo da recusa
     // (obrigatório).
-    note: z.string().max(6000).optional().or(z.literal("")),
+    note: z.string().max(20000).optional().or(z.literal("")), // HTML rico
   })
   .refine(
     (d) => d.decision !== "reject" || (!!d.note && d.note.trim().length >= 3),

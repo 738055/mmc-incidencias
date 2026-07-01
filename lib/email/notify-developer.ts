@@ -106,7 +106,7 @@ export async function notifyDeveloper(
       companyName: company?.name ?? "MMC Incidências",
       openedAt: formatDateTime(inc.created_at),
       aiAnalysis: inc.ai_analysis,
-      triageNote: note ?? null,
+      triageNote: note ? sanitizeRichText(note) : null,
       url: `${base}${basePath}/${incidentId}`,
       imageUrls,
       fileLinks,
