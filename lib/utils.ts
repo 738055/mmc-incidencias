@@ -6,6 +6,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Heurística: o texto contém marcação HTML? (descrições novas são HTML rico;
+ *  as antigas são texto puro e caem no fallback de exibição.) */
+export function isHtml(s: string | null | undefined): boolean {
+  return !!s && /<\/?[a-z][\s\S]*>/i.test(s);
+}
+
 /** Formata uma data ISO para pt-BR (dd/mm/aaaa hh:mm). */
 export function formatDateTime(value: string | Date | null | undefined) {
   if (!value) return "—";

@@ -8,7 +8,8 @@ import {
   type IncidentFormState,
 } from "@/app/(app)/incidencias/actions";
 import { Button } from "@/components/ui/button";
-import { Label, Textarea } from "@/components/ui/input";
+import { Label } from "@/components/ui/input";
+import { RichTextField } from "@/components/ui/rich-text";
 import { MediaUploader } from "@/components/media/media-uploader";
 import type { TicketKind } from "@/lib/supabase/types";
 
@@ -46,14 +47,9 @@ export function ResolvePanel({
       <input type="hidden" name="incidentId" value={incidentId} />
       <input type="hidden" name="kind" value={kind} />
       <div>
-        <Label htmlFor="resolution">
-          {isImprovement ? "Notas de entrega" : "Solução aplicada"}
-        </Label>
-        <Textarea
-          id="resolution"
+        <Label>{isImprovement ? "Notas de entrega" : "Solução aplicada"}</Label>
+        <RichTextField
           name="resolution"
-          rows={4}
-          required
           placeholder={
             isImprovement
               ? "O que foi desenvolvido/entregue. Isso vira histórico e alimenta a IA."

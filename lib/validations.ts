@@ -66,23 +66,23 @@ export const tutorialSchema = z.object({
 export const incidentSchema = z.object({
   kind: z.enum(["incident", "improvement"]).default("incident"),
   title: z.string().min(3, "Título muito curto").max(160),
-  description: z.string().min(3, "Descreva o problema").max(8000),
+  description: z.string().min(3, "Descreva o problema").max(20000), // HTML (tags ocupam espaço)
   systemId: z.string().uuid().optional().or(z.literal("")),
   companyId: z.string().uuid().optional().or(z.literal("")),
   category: z.string().max(80).optional().or(z.literal("")),
   stakeholderArea: z.string().max(120).optional().or(z.literal("")),
-  benefit: z.string().max(2000).optional().or(z.literal("")),
+  benefit: z.string().max(8000).optional().or(z.literal("")), // HTML rico
   priority: z.enum(["low", "medium", "high", "critical"]),
 });
 
 export const commentSchema = z.object({
   incidentId: z.string().uuid(),
-  body: z.string().min(1, "Comentário vazio").max(4000),
+  body: z.string().min(1, "Comentário vazio").max(10000), // HTML rico
 });
 
 export const resolveSchema = z.object({
   incidentId: z.string().uuid(),
-  resolution: z.string().min(3, "Descreva a solução aplicada").max(8000),
+  resolution: z.string().min(3, "Descreva a solução aplicada").max(20000), // HTML rico
 });
 
 export const priorityChangeSchema = z.object({
@@ -100,7 +100,7 @@ export const triageSchema = z
     decision: z.enum(["accept", "reject"]),
     // Observação no aceite (opcional, refina o pedido) OU motivo da recusa
     // (obrigatório).
-    note: z.string().max(2000).optional().or(z.literal("")),
+    note: z.string().max(6000).optional().or(z.literal("")),
   })
   .refine(
     (d) => d.decision !== "reject" || (!!d.note && d.note.trim().length >= 3),

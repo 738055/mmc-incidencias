@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, Send } from "lucide-react";
 import {
@@ -8,7 +8,7 @@ import {
   type IncidentFormState,
 } from "@/app/(app)/incidencias/actions";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
+import { RichTextField } from "@/components/ui/rich-text";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -29,20 +29,21 @@ export function CommentForm({ incidentId }: { incidentId: string }) {
     addCommentAction,
     {},
   );
-  const ref = useRef<HTMLFormElement>(null);
+  // Remonta o editor (limpa) após comentar com sucesso.
+  const [editorKey, setEditorKey] = useState(0);
 
   useEffect(() => {
-    if (!state.error) ref.current?.reset();
+    // Limpa o editor só após sucesso (preserva o texto se deu erro).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!state.error) setEditorKey((k) => k + 1);
   }, [state]);
 
   return (
-    <form ref={ref} action={formAction} className="space-y-2">
+    <form action={formAction} className="space-y-2">
       <input type="hidden" name="incidentId" value={incidentId} />
-      <Textarea
+      <RichTextField
+        key={editorKey}
         name="body"
-        rows={3}
-        required
-        maxLength={4000}
         placeholder="Escreva um comentário..."
       />
       {state.error && <p className="text-xs text-red-600">{state.error}</p>}

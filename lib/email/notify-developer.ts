@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { sendIncidentEmail } from "@/lib/email/send";
 import { KIND_LABELS, PRIORITY_LABELS } from "@/lib/domain";
 import { formatDateTime } from "@/lib/utils";
+import { sanitizeRichText } from "@/lib/sanitize";
 import type { TicketKind, IncidentPriority } from "@/lib/supabase/types";
 
 function humanSize(bytes: number) {
@@ -95,11 +96,11 @@ export async function notifyDeveloper(
       ref: inc.ref,
       kindLabel: KIND_LABELS[inc.kind as TicketKind],
       title: inc.title,
-      description: inc.description,
+      description: sanitizeRichText(inc.description),
       systemName: system?.name ?? null,
       category: inc.category,
       stakeholderArea: inc.stakeholder_area,
-      benefit: inc.benefit,
+      benefit: inc.benefit ? sanitizeRichText(inc.benefit) : inc.benefit,
       priorityLabel: PRIORITY_LABELS[inc.priority as IncidentPriority],
       requesterName: creator?.full_name || creator?.email || "Solicitante",
       companyName: company?.name ?? "MMC Incidências",

@@ -28,7 +28,7 @@ import { TriagePanel } from "@/components/incidents/triage-panel";
 import { StageHistory } from "@/components/incidents/stage-history";
 import { TicketLive } from "@/components/incidents/ticket-live";
 import { MediaGrid } from "@/components/media/media-grid";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, isHtml } from "@/lib/utils";
 import type { TicketKind } from "@/lib/supabase/types";
 
 /**
@@ -154,7 +154,7 @@ export async function TicketDetail({
           {awaitingTriage && (
             <Card className="border-l-4 border-l-orange-600">
               <CardContent className="pt-5">
-                <TriagePanel incidentId={inc.id} />
+                <TriagePanel incidentId={inc.id} kind={inc.kind} />
               </CardContent>
             </Card>
           )}
@@ -162,9 +162,16 @@ export async function TicketDetail({
           <Card>
             <CardContent className="pt-5">
               <SectionHeader icon={FileText} title="Descrição do problema" />
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
-                {inc.description}
-              </p>
+              {isHtml(inc.description) ? (
+                <div
+                  className="rich-html text-muted"
+                  dangerouslySetInnerHTML={{ __html: inc.description }}
+                />
+              ) : (
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
+                  {inc.description}
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -175,9 +182,16 @@ export async function TicketDetail({
                   icon={Lightbulb}
                   title="Justificativa / benefício esperado"
                 />
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
-                  {inc.benefit}
-                </p>
+                {isHtml(inc.benefit) ? (
+                  <div
+                    className="rich-html text-muted"
+                    dangerouslySetInnerHTML={{ __html: inc.benefit }}
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
+                    {inc.benefit}
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}
@@ -236,9 +250,16 @@ export async function TicketDetail({
                   <CheckCircle2 className="h-[18px] w-[18px]" />
                   {isImprovement ? "Entrega" : "Solução"}
                 </h2>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                  {inc.resolution}
-                </p>
+                {isHtml(inc.resolution) ? (
+                  <div
+                    className="rich-html text-foreground"
+                    dangerouslySetInnerHTML={{ __html: inc.resolution }}
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                    {inc.resolution}
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}
@@ -269,9 +290,16 @@ export async function TicketDetail({
                             {formatDateTime(cc.created_at)}
                           </span>
                         </p>
-                        <p className="mt-1 whitespace-pre-wrap rounded-lg border border-border bg-surface-muted p-3 text-sm text-muted">
-                          {cc.body}
-                        </p>
+                        {isHtml(cc.body) ? (
+                          <div
+                            className="rich-html mt-1 rounded-lg border border-border bg-surface-muted p-3 text-muted"
+                            dangerouslySetInnerHTML={{ __html: cc.body }}
+                          />
+                        ) : (
+                          <p className="mt-1 whitespace-pre-wrap rounded-lg border border-border bg-surface-muted p-3 text-sm text-muted">
+                            {cc.body}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

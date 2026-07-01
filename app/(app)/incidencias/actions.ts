@@ -26,6 +26,7 @@ import {
   triageSchema,
 } from "@/lib/validations";
 import { logAudit } from "@/lib/audit";
+import { sanitizeRichText, htmlToText } from "@/lib/sanitize";
 import { notifyDeveloper } from "@/lib/email/notify-developer";
 import { analyzeIncidentImages, triageIncident, embedText } from "@/lib/ai";
 import { retrieveContext } from "@/lib/ai/retrieval";
@@ -65,6 +66,17 @@ export async function createIncidentAction(
   }
   const kind = parsed.data.kind;
 
+  // Descrição vem do editor rico: sanitiza o HTML (grava limpo) e extrai o texto
+  // puro (validar "vazio" e alimentar a IA/embedding sem tags).
+  const descriptionHtml = sanitizeRichText(parsed.data.description);
+  const descriptionText = htmlToText(descriptionHtml);
+  if (descriptionText.length < 3) {
+    return { error: "Descreva o problema." };
+  }
+  parsed.data.description = descriptionText; // IA/embedding usam o texto puro
+
+  const benefitHtml = parsed.data.benefit ? sanitizeRichText(parsed.data.benefit) : "";
+
   let attachments: AttachmentInput[] = [];
   try {
     const raw = formData.get("attachments");
@@ -79,12 +91,12 @@ export async function createIncidentAction(
       kind,
       status: initialStatusFor(kind),
       title: parsed.data.title,
-      description: parsed.data.description,
+      description: descriptionHtml,
       system_id: parsed.data.systemId || null,
       company_id: parsed.data.companyId || null,
       category: parsed.data.category || null,
       stakeholder_area: parsed.data.stakeholderArea || null,
-      benefit: parsed.data.benefit || null,
+      benefit: htmlToText(benefitHtml) ? benefitHtml : null,
       priority: parsed.data.priority,
       created_by: profile.id,
     })
@@ -245,10 +257,14 @@ export async function addCommentAction(
   });
   if (!parsed.success) return { error: "Comentário inválido." };
 
+  const bodyHtml = sanitizeRichText(parsed.data.body);
+  const bodyText = htmlToText(bodyHtml);
+  if (bodyText.length < 1) return { error: "Comentário vazio." };
+
   const { error } = await supabase.from("incident_comments").insert({
     incident_id: parsed.data.incidentId,
     author_id: profile.id,
-    body: parsed.data.body,
+    body: bodyHtml,
   });
   if (error) return { error: "Não foi possível comentar." };
 
@@ -264,9 +280,7 @@ export async function addCommentAction(
       if (recipientId && recipientId !== profile.id) {
         const contact = await loadContact(recipientId);
         const excerpt =
-          parsed.data.body.length > 140
-            ? `${parsed.data.body.slice(0, 140)}…`
-            : parsed.data.body;
+          bodyText.length > 140 ? `${bodyText.slice(0, 140)}…` : bodyText;
         await notify({
           userId: recipientId,
           incidentId: parsed.data.incidentId,
@@ -566,13 +580,17 @@ export async function resolveIncidentAction(
   });
   if (!parsed.success) return { error: "Descreva a solução aplicada." };
 
+  const resolutionHtml = sanitizeRichText(parsed.data.resolution);
+  const resolutionText = htmlToText(resolutionHtml);
+  if (resolutionText.length < 3) return { error: "Descreva a solução aplicada." };
+
   const kind = (String(formData.get("kind")) as TicketKind) || "incident";
   const doneStatus = doneStatusFor(kind);
   const supabase = await createClient();
   const { error } = await supabase
     .from("incidents")
     .update({
-      resolution: parsed.data.resolution,
+      resolution: resolutionHtml,
       status: doneStatus,
     })
     .eq("id", parsed.data.incidentId);
@@ -606,7 +624,7 @@ export async function resolveIncidentAction(
     const parties = await loadParties(supabase, parsed.data.incidentId);
 
     const embedding = await embedText(
-      `${parties?.title ?? ""}\n\n${parsed.data.resolution}`,
+      `${parties?.title ?? ""}\n\n${resolutionText}`,
     );
     if (embedding) {
       await createAdminClient()

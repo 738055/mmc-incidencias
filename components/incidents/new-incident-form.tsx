@@ -9,8 +9,9 @@ import {
 } from "@/app/(app)/incidencias/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { Input, Label, Select } from "@/components/ui/input";
 import { MediaUploader } from "@/components/media/media-uploader";
+import { RichTextField } from "@/components/ui/rich-text";
 import { CATEGORIES, PRIORITY_LABELS, PRIORITY_ORDER } from "@/lib/domain";
 import type { TicketKind } from "@/lib/supabase/types";
 
@@ -74,12 +75,9 @@ export function NewTicketForm({
           </div>
 
           <div>
-            <Label htmlFor="description">Descrição *</Label>
-            <Textarea
-              id="description"
+            <Label>Descrição *</Label>
+            <RichTextField
               name="description"
-              required
-              rows={6}
               placeholder={
                 isImprovement
                   ? "O que deve ser feito? Comportamento atual x desejado, telas/fluxos afetados..."
@@ -100,12 +98,9 @@ export function NewTicketForm({
                 />
               </div>
               <div className="sm:col-span-2">
-                <Label htmlFor="benefit">Justificativa / benefício esperado</Label>
-                <Textarea
-                  id="benefit"
+                <Label>Justificativa / benefício esperado</Label>
+                <RichTextField
                   name="benefit"
-                  rows={2}
-                  maxLength={2000}
                   placeholder="Ex.: reduzir em 30% o tempo de emissão de reservas"
                 />
               </div>

@@ -10,6 +10,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { isHtml } from "@/lib/utils";
 
 export interface IncidentEmailProps {
   ref: number;
@@ -119,15 +120,29 @@ export function IncidentNotificationEmail({
               </Text>
             </Section>
 
-            {/* Descrição */}
+            {/* Descrição (HTML rico do editor; legado em texto puro) */}
             <SectionTitle>Descrição</SectionTitle>
-            <Text style={bodyText}>{description}</Text>
+            {isHtml(description) ? (
+              <div
+                style={{ color: "#0b1524", fontSize: 14, lineHeight: "22px" }}
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
+            ) : (
+              <Text style={bodyText}>{description}</Text>
+            )}
 
             {/* Benefício esperado (melhorias) */}
             {benefit && (
               <>
                 <SectionTitle>Benefício esperado</SectionTitle>
-                <Text style={bodyText}>{benefit}</Text>
+                {isHtml(benefit) ? (
+                  <div
+                    style={{ color: "#0b1524", fontSize: 14, lineHeight: "22px" }}
+                    dangerouslySetInnerHTML={{ __html: benefit }}
+                  />
+                ) : (
+                  <Text style={bodyText}>{benefit}</Text>
+                )}
               </>
             )}
 
