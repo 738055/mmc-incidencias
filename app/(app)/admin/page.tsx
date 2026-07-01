@@ -16,11 +16,11 @@ import { Th } from "@/components/admin/table";
 import { CreateUserForm } from "@/components/admin/create-user-form";
 import {
   setRoleAction,
-  setDepartmentAction,
   approveUserAction,
   setStatusAction,
   backfillEmbeddingsAction,
 } from "@/app/(app)/admin/actions";
+import { DepartmentSelect } from "@/components/admin/department-select";
 import { RestrictedNotice } from "@/components/layout/restricted";
 import { formatDateTime } from "@/lib/utils";
 import type { Profile } from "@/lib/supabase/types";
@@ -195,24 +195,11 @@ export default async function AdminUsersPage() {
                       </form>
                     </td>
                     <td className="px-6 py-5">
-                      <form action={setDepartmentAction} className="flex items-center gap-2">
-                        <input type="hidden" name="id" value={u.id} />
-                        <select
-                          name="departmentId"
-                          defaultValue={u.department_id ?? ""}
-                          className="h-10 rounded-lg border border-border bg-surface px-3 text-sm shadow-sm"
-                        >
-                          <option value="">—</option>
-                          {departments.map((d) => (
-                            <option key={d.id} value={d.id}>
-                              {d.name}
-                            </option>
-                          ))}
-                        </select>
-                        <Button type="submit" size="sm" variant="outline">
-                          Salvar
-                        </Button>
-                      </form>
+                      <DepartmentSelect
+                        userId={u.id}
+                        current={u.department_id}
+                        departments={departments}
+                      />
                     </td>
                     <td className="px-6 py-5">
                       <Badge className={USER_STATUS_TONE[u.status]}>
