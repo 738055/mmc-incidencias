@@ -7,8 +7,10 @@ import { requireProfile } from "@/lib/auth";
 import {
   companySchema,
   systemSchema,
+  systemDeveloperSchema,
   createUserSchema,
 } from "@/lib/validations";
+import type { SystemDeveloper } from "@/lib/supabase/types";
 import { logAudit } from "@/lib/audit";
 import { sendWelcomeEmail } from "@/lib/email/send";
 import { embedText } from "@/lib/ai";
@@ -27,6 +29,24 @@ function generatePassword(): string {
     .split("")
     .sort(() => Math.random() - 0.5)
     .join("");
+}
+
+/** Lê os desenvolvedores (JSON do form), valida cada um e dedup por e-mail. */
+function parseDevelopers(raw: FormDataEntryValue | null): SystemDeveloper[] {
+  if (typeof raw !== "string" || !raw) return [];
+  let arr: unknown;
+  try {
+    arr = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(arr)) return [];
+  const devs: SystemDeveloper[] = [];
+  for (const item of arr) {
+    const p = systemDeveloperSchema.safeParse(item);
+    if (p.success) devs.push({ name: p.data.name.trim(), email: p.data.email });
+  }
+  return devs.filter((d, i, a) => a.findIndex((x) => x.email === d.email) === i);
 }
 
 /** Extrai e-mails válidos de um texto separado por vírgula/; / quebra de linha. */
@@ -57,7 +77,6 @@ export async function createSystemAction(formData: FormData) {
   const parsed = systemSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? "",
-    developerEmails: formData.get("developerEmails") ?? "",
     companyId: formData.get("companyId") ?? "",
   });
   if (!parsed.success) return;
@@ -65,7 +84,7 @@ export async function createSystemAction(formData: FormData) {
   await supabase.from("systems").insert({
     name: parsed.data.name,
     description: parsed.data.description || null,
-    developer_emails: parseEmailList(parsed.data.developerEmails),
+    developers: parseDevelopers(formData.get("developers")),
     company_id: parsed.data.companyId || null,
   });
   revalidatePath("/sistemas");
@@ -86,7 +105,6 @@ export async function updateSystemAction(formData: FormData) {
   const parsed = systemSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? "",
-    developerEmails: formData.get("developerEmails") ?? "",
     companyId: formData.get("companyId") ?? "",
   });
   if (!parsed.success) return;
@@ -96,7 +114,7 @@ export async function updateSystemAction(formData: FormData) {
     .update({
       name: parsed.data.name,
       description: parsed.data.description || null,
-      developer_emails: parseEmailList(parsed.data.developerEmails),
+      developers: parseDevelopers(formData.get("developers")),
       company_id: parsed.data.companyId || null,
     })
     .eq("id", id);

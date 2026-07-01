@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { Input, Label, Select } from "@/components/ui/input";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Th } from "@/components/admin/table";
+import { SystemDevelopersField } from "@/components/admin/system-developers-field";
 import { createSystemAction, toggleSystemAction } from "@/app/(app)/admin/actions";
 import { RestrictedNotice } from "@/components/layout/restricted";
 
@@ -65,16 +66,11 @@ export default async function SystemsPage() {
               <Input id="description" name="description" placeholder="Opcional" />
             </div>
             <div className="sm:col-span-2">
-              <Label htmlFor="developerEmails">E-mails dos desenvolvedores</Label>
-              <Textarea
-                id="developerEmails"
-                name="developerEmails"
-                rows={2}
-                placeholder="dev1@empresa.com, dev2@empresa.com"
-              />
+              <Label>Desenvolvedores</Label>
+              <SystemDevelopersField />
               <p className="mt-1 text-xs text-muted">
-                Todos recebem os chamados deste sistema por e-mail. Separe por
-                vírgula ou quebra de linha.
+                Nome + e-mail de cada dev. Todos recebem os chamados deste sistema
+                por e-mail.
               </p>
             </div>
             <div className="sm:col-span-2">
@@ -129,9 +125,11 @@ export default async function SystemsPage() {
                       {(s.company_id && companyName.get(s.company_id)) || "—"}
                     </td>
                     <td className="max-w-xs px-6 py-5 text-muted">
-                      {s.developer_emails?.length ? (
+                      {s.developers?.length ? (
                         <span className="line-clamp-2 break-words text-xs">
-                          {s.developer_emails.join(", ")}
+                          {s.developers
+                            .map((d) => (d.name ? `${d.name} <${d.email}>` : d.email))
+                            .join(", ")}
                         </span>
                       ) : (
                         "—"

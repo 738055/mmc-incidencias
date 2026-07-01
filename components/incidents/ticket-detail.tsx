@@ -25,6 +25,7 @@ import { ResolvePanel } from "@/components/incidents/resolve-panel";
 import { AiFeedback } from "@/components/incidents/ai-feedback";
 import { TicketActions } from "@/components/incidents/ticket-actions";
 import { TriagePanel } from "@/components/incidents/triage-panel";
+import { ResendDeveloperButton } from "@/components/incidents/resend-developer-button";
 import { StageHistory } from "@/components/incidents/stage-history";
 import { TicketLive } from "@/components/incidents/ticket-live";
 import { MediaGrid } from "@/components/media/media-grid";
@@ -316,6 +317,20 @@ export async function TicketDetail({
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-4">
+          {staff && !awaitingTriage && inc.status !== "rejected" && (
+            <Card>
+              <CardContent className="space-y-3 pt-5">
+                <h2 className="text-base font-semibold text-navy-700">
+                  Encaminhamento ao desenvolvedor
+                </h2>
+                <p className="text-sm text-muted">
+                  Reenvie o chamado por e-mail aos desenvolvedores do sistema e
+                  contatos da empresa (ex.: se o 1º envio falhou).
+                </p>
+                <ResendDeveloperButton incidentId={inc.id} />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="space-y-4 pt-5 text-sm">
               <h2 className="border-b border-border pb-3 text-xl font-bold text-navy-700">

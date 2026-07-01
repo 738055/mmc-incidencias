@@ -575,6 +575,45 @@ export async function triageTicketAction(
   return {};
 }
 
+/**
+ * Reenvia o e-mail do chamado ao(s) desenvolvedor(es) do sistema e contatos da
+ * empresa. Útil quando o 1º envio falhou (Resend não configurado, dev sem
+ * cadastro, etc.). Reaproveita a última nota de triagem (spec) como observação.
+ * Só equipe; devolve mensagem/erro para feedback na tela.
+ */
+export async function resendDeveloperAction(
+  _prev: { error?: string; message?: string },
+  formData: FormData,
+): Promise<{ error?: string; message?: string }> {
+  const profile = await requireProfile();
+  if (!isStaff(profile.role)) return { error: "Sem permissão." };
+  const incidentId = String(formData.get("incidentId"));
+  if (!incidentId) return { error: "Chamado inválido." };
+
+  // Recupera a spec da triagem (última nota) para reincluir no e-mail.
+  const supabase = await createClient();
+  const { data: tri } = await supabase
+    .from("incident_comments")
+    .select("body")
+    .eq("incident_id", incidentId)
+    .ilike("body", "%Triagem —%")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const res = await notifyDeveloper(incidentId, tri?.body || undefined);
+  if (res.recipients === 0) {
+    return {
+      error:
+        "Nenhum destinatário. Cadastre os desenvolvedores no sistema (ou contatos na empresa).",
+    };
+  }
+  if (!res.sent) {
+    return { error: "Falha no envio. Verifique RESEND_API_KEY/EMAIL_FROM." };
+  }
+  return { message: `Reenviado para ${res.recipients} destinatário(s).` };
+}
+
 export async function resolveIncidentAction(
   _prev: IncidentFormState,
   formData: FormData,

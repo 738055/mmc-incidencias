@@ -115,8 +115,13 @@ export const companySchema = z.object({
 export const systemSchema = z.object({
   name: z.string().min(2).max(120),
   description: z.string().max(500).optional().or(z.literal("")),
-  developerEmails: z.string().max(1000), // lista separada por vírgula/linha
   companyId: z.string().uuid().optional().or(z.literal("")),
+});
+
+/** Um desenvolvedor do sistema (nome opcional, e-mail obrigatório). */
+export const systemDeveloperSchema = z.object({
+  name: z.string().max(120).optional().default(""),
+  email: z.string().email("E-mail do dev inválido").max(160).toLowerCase(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -56,12 +56,14 @@ export type Company = {
   created_at: string;
 }
 
+export type SystemDeveloper = { name: string; email: string };
+
 export type SystemRecord = {
   id: string;
   name: string;
   description: string | null;
-  /** Desenvolvedores — todos recebem os chamados deste sistema por e-mail. */
-  developer_emails: string[];
+  /** Desenvolvedores (nome + e-mail) — todos recebem os chamados por e-mail. */
+  developers: SystemDeveloper[];
   /** Empresa responsável — sugerida ao abrir chamado/melhoria deste sistema. */
   company_id: string | null;
   active: boolean;

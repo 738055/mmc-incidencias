@@ -39,7 +39,7 @@ export async function notifyDeveloper(
     const { data: system } = inc.system_id
       ? await admin
           .from("systems")
-          .select("name, developer_emails")
+          .select("name, developers")
           .eq("id", inc.system_id)
           .single()
       : { data: null };
@@ -52,7 +52,7 @@ export async function notifyDeveloper(
       : { data: null };
 
     const recipients = [
-      ...(system?.developer_emails ?? []),
+      ...(system?.developers ?? []).map((d) => d.email),
       ...(company?.contact_emails ?? []),
     ]
       .map((e) => e.trim().toLowerCase())

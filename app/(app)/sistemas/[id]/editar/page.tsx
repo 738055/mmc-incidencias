@@ -7,7 +7,8 @@ import { requireProfile } from "@/lib/auth";
 import { RestrictedNotice } from "@/components/layout/restricted";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { Input, Label, Select } from "@/components/ui/input";
+import { SystemDevelopersField } from "@/components/admin/system-developers-field";
 import { updateSystemAction } from "@/app/(app)/admin/actions";
 
 export const metadata: Metadata = { title: "Editar sistema" };
@@ -63,17 +64,11 @@ export default async function EditSystemPage({
               />
             </div>
             <div className="sm:col-span-2">
-              <Label htmlFor="developerEmails">E-mails dos desenvolvedores</Label>
-              <Textarea
-                id="developerEmails"
-                name="developerEmails"
-                rows={2}
-                defaultValue={system.developer_emails?.join(", ") ?? ""}
-                placeholder="dev1@empresa.com, dev2@empresa.com"
-              />
+              <Label>Desenvolvedores</Label>
+              <SystemDevelopersField defaultValue={system.developers ?? []} />
               <p className="mt-1 text-xs text-muted">
-                Todos recebem os chamados deste sistema por e-mail. Separe por
-                vírgula ou quebra de linha.
+                Nome + e-mail de cada dev. Todos recebem os chamados deste sistema
+                por e-mail.
               </p>
             </div>
             <div className="sm:col-span-2">
