@@ -82,6 +82,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "user.disable": "Conta desativada",
   "user.role_change": "Papel alterado",
   "user.department_change": "Departamento alterado",
+  "incident.priority_change": "Prioridade alterada",
+  "incident.assign": "Chamado assumido",
   "password.change": "Senha alterada",
   "password.reset_request": "Redefinição de senha solicitada",
 };
@@ -204,3 +206,4 @@ export function isPauseTransition(from: IncidentStatus, to: IncidentStatus) {
 /** Ações de reprioritização registradas em audit_log (lidas pela diretoria). */
 export const PRIORITY_CHANGE_ACTION = "incident.priority_change";
 export const STATUS_PAUSE_ACTION = "incident.status_pause";
+export const ASSIGN_ACTION = "incident.assign";

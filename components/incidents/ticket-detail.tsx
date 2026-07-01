@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   CalendarDays,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import {
   isStaff,
@@ -32,11 +32,16 @@ import { AiFeedback } from "@/components/incidents/ai-feedback";
 import { TicketActions } from "@/components/incidents/ticket-actions";
 import { TriagePanel } from "@/components/incidents/triage-panel";
 import { ResendDeveloperButton } from "@/components/incidents/resend-developer-button";
-import { StageHistory } from "@/components/incidents/stage-history";
+import { TicketLog, type LogEvent } from "@/components/incidents/ticket-log";
 import { TicketLive } from "@/components/incidents/ticket-live";
 import { MediaGrid } from "@/components/media/media-grid";
-import { formatDateTime, isHtml } from "@/lib/utils";
-import type { TicketKind } from "@/lib/supabase/types";
+import { formatDateTime, formatDuration, isHtml } from "@/lib/utils";
+import { PRIORITY_CHANGE_ACTION, ASSIGN_ACTION } from "@/lib/domain";
+import type {
+  TicketKind,
+  IncidentStatus,
+  IncidentPriority,
+} from "@/lib/supabase/types";
 
 /**
  * Detalhe de um ticket (incidência ou melhoria). Reutilizado pelas rotas
@@ -82,7 +87,9 @@ export async function TicketDetail({
         .order("created_at"),
       supabase
         .from("incident_status_history")
-        .select("*")
+        .select(
+          "*, actor:profiles!incident_status_history_changed_by_fkey(full_name, email)",
+        )
         .eq("incident_id", id)
         .order("created_at", { ascending: true }),
     ]);
@@ -121,6 +128,60 @@ export async function TicketDetail({
   const done = isDoneStatus(inc.status);
   const awaitingTriage =
     profile.role === "admin" && inc.status === initialStatusFor(kind);
+
+  // Histórico unificado: status (com autor + tempo na etapa) + prioridade.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const statusRows = (history ?? []) as any[];
+  const statusEvents: LogEvent[] = statusRows.map((h, i, arr) => ({
+    id: h.id,
+    at: h.created_at,
+    kind: "status",
+    status: h.status as IncidentStatus,
+    actor: h.actor?.full_name || h.actor?.email || null,
+    duration: formatDuration(h.created_at, arr[i + 1]?.created_at),
+    current: i === arr.length - 1,
+  }));
+
+  const auditEvents: LogEvent[] = [];
+  if (staff) {
+    // audit_log é admin-only na RLS → lê via service role, escopado ao chamado.
+    const { data: logs } = await createAdminClient()
+      .from("audit_log")
+      .select("id, created_at, action, actor_email, details")
+      .eq("target_id", id)
+      .in("action", [PRIORITY_CHANGE_ACTION, ASSIGN_ACTION])
+      .order("created_at", { ascending: true });
+    for (const e of logs ?? []) {
+      if (e.action === PRIORITY_CHANGE_ACTION) {
+        const d = e.details as {
+          from?: IncidentPriority;
+          to?: IncidentPriority;
+          reason?: string;
+        };
+        auditEvents.push({
+          id: e.id,
+          at: e.created_at,
+          kind: "priority",
+          from: d.from ?? "medium",
+          to: d.to ?? "medium",
+          reason: d.reason || null,
+          actor: e.actor_email || null,
+        });
+      } else {
+        const d = e.details as { assignee?: string };
+        auditEvents.push({
+          id: e.id,
+          at: e.created_at,
+          kind: "assign",
+          actor: d.assignee || e.actor_email || null,
+        });
+      }
+    }
+  }
+
+  const logEvents: LogEvent[] = [...statusEvents, ...auditEvents].sort((a, b) =>
+    a.at.localeCompare(b.at),
+  );
 
   return (
     <div className="space-y-7">
@@ -399,7 +460,7 @@ export async function TicketDetail({
             </CardContent>
           </Card>
 
-          <StageHistory items={history ?? []} />
+          <TicketLog events={logEvents} />
 
           {staff && (
             <Card className="order-first">

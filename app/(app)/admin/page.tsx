@@ -15,12 +15,12 @@ import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Th } from "@/components/admin/table";
 import { CreateUserForm } from "@/components/admin/create-user-form";
 import {
-  setRoleAction,
   approveUserAction,
   setStatusAction,
   backfillEmbeddingsAction,
 } from "@/app/(app)/admin/actions";
 import { DepartmentSelect } from "@/components/admin/department-select";
+import { RoleSelect } from "@/components/admin/role-select";
 import { RestrictedNotice } from "@/components/layout/restricted";
 import { formatDateTime } from "@/lib/utils";
 import type { Profile } from "@/lib/supabase/types";
@@ -175,24 +175,7 @@ export default async function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <form action={setRoleAction} className="flex items-center gap-2">
-                        <input type="hidden" name="id" value={u.id} />
-                        <select
-                          name="role"
-                          defaultValue={u.role}
-                          disabled={self}
-                          className="h-10 rounded-lg border border-border bg-surface px-3 text-sm shadow-sm disabled:opacity-50"
-                        >
-                          {(["requester", "technician", "admin", "partner"] as const).map((r) => (
-                            <option key={r} value={r}>
-                              {ROLE_LABELS[r]}
-                            </option>
-                          ))}
-                        </select>
-                        <Button type="submit" size="sm" variant="outline" disabled={self}>
-                          Salvar
-                        </Button>
-                      </form>
+                      <RoleSelect userId={u.id} current={u.role} disabled={self} />
                     </td>
                     <td className="px-6 py-5">
                       <DepartmentSelect

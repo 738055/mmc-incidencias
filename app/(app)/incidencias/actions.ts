@@ -16,6 +16,7 @@ import {
   isPauseTransition,
   PRIORITY_CHANGE_ACTION,
   STATUS_PAUSE_ACTION,
+  ASSIGN_ACTION,
 } from "@/lib/domain";
 import type { IncidentStatus, TicketKind } from "@/lib/supabase/types";
 import {
@@ -328,6 +329,14 @@ export async function assignToMeAction(formData: FormData) {
     .from("incidents")
     .update({ assigned_to: profile.id, status: "in_progress" })
     .eq("id", id);
+
+  await logAudit({
+    actorId: profile.id,
+    actorEmail: profile.email,
+    action: ASSIGN_ACTION,
+    targetId: id,
+    details: { assignee: profile.full_name || profile.email },
+  });
 
   try {
     const parties = await loadParties(supabase, id);
